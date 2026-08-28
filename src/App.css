@@ -1,0 +1,284 @@
+/* =========================================================
+   TRANSMAA RESPONSIVE APP STYLES
+   ========================================================= */
+
+:root {
+  --transmaa-orange: #f37021;
+  --transmaa-orange-dark: #d95d12;
+  --transmaa-peach: #fef3ec;
+  --transmaa-border: #fed7aa;
+}
+
+/* ---------- Global box sizing ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ---------- Prevent horizontal overflow ---------- */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* ---------- Better mobile behavior ---------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+}
+
+/* ---------- Buttons ---------- */
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--transmaa-orange);
+  outline-offset: 2px;
+}
+
+/* ---------- Inputs ---------- */
+
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+/* ---------- Scrollbar ---------- */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d6d6;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--transmaa-orange);
+}
+
+/* =========================================================
+   TRANSMAA DEVICE FRAME
+   ========================================================= */
+
+/*
+  Your App.jsx already creates the main mobile frame with
+  max-w-[430px].
+
+  These rules make sure it behaves correctly on larger
+  screens and small phones.
+*/
+
+.transmaa-app {
+  width: 100%;
+  max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 430px) {
+  body {
+    min-width: 320px;
+  }
+
+  /*
+    Prevent cards and content from touching screen edges.
+  */
+
+  .transmaa-app {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  /*
+    Make sure text doesn't force horizontal scrolling.
+  */
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  span {
+    overflow-wrap: anywhere;
+  }
+
+  /*
+    Better mobile inputs.
+  */
+
+  input,
+  select {
+    min-width: 0;
+  }
+
+  /*
+    Prevent iOS/Android browsers from zooming into inputs.
+  */
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 360px) {
+  /*
+    OTP boxes need to shrink on very small phones.
+  */
+
+  #otp-box-0,
+  #otp-box-1,
+  #otp-box-2,
+  #otp-box-3,
+  #otp-box-4,
+  #otp-box-5 {
+    width: 42px !important;
+    height: 52px !important;
+  }
+
+  /*
+    Reduce general horizontal padding.
+  */
+
+  .p-5 {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /*
+    Prevent long truck names from making cards too wide.
+  */
+
+  h4 {
+    max-width: 180px;
+  }
+}
+
+/* =========================================================
+   TABLETS
+   ========================================================= */
+
+@media (min-width: 431px) and (max-width: 768px) {
+  body {
+    padding: 16px;
+  }
+}
+
+/* =========================================================
+   DESKTOP
+   ========================================================= */
+
+@media (min-width: 769px) {
+  body {
+    min-height: 100vh;
+  }
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.8;
+  }
+
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.animate-radar-pulse {
+  animation: radar-pulse 2s ease-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* =========================================================
+   SAFE AREA SUPPORT
+   ========================================================= */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
