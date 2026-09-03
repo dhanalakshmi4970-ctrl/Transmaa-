@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Transmaa - Driver</title>
+
+    <link rel="stylesheet" href="driver.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+    <div class="logo">
+        <span>TRANS</span><b>MAA</b>
+    </div>
+
+    <nav>
+        <a href="#" onclick="showPage('login')">Login</a>
+        <a href="#" onclick="showPage('register')">Register</a>
+        
+    </nav>
+</header>
+
+<section id="login" class="page active">
+
+    <div class="login-container">
+
+        <div class="login-left">
+            <h1>Driver Login</h1>
+            <p>Login to find and accept available loads.</p>
+
+            <input
+                type="text"
+                id="loginMobile"
+                placeholder="Enter Mobile Number"
+                maxlength="10"
+            >
+
+            <button onclick="sendOTP()">Send OTP</button>
+
+            <div id="otpBox" class="hidden">
+                <input
+                    type="text"
+                    id="otp"
+                    placeholder="Enter OTP"
+                    maxlength="6"
+                >
+
+                <button onclick="loginDriver()">Login</button>
+            </div>
+
+            <p class="register-text">
+                Don't have an account?
+                <a href="#" onclick="showPage('register')">Register as Driver</a>
+            </p>
+
+        </div>
+
+        <div class="login-right">
+            <div class="truck-icon">🚚</div>
+            <h2>Drive With Transmaa</h2>
+            <p>Find loads on your route and grow your business.</p>
+        </div>
+
+    </div>
+
+</section>
+
+<section id="register" class="page">
+
+    <div class="form-container">
+
+        <h1>Driver Registration</h1>
+        <p class="subtitle">Register yourself as a Transmaa driver.</p>
+
+        <div id="registerStep1" class="register-step">
+
+            <h2>Mobile Verification</h2>
+
+            <input
+                type="text"
+                id="registerMobile"
+                placeholder="Mobile Number"
+                maxlength="10"
+            >
+
+            <button onclick="registerOTP()">Send OTP</button>
+
+            <div id="registerOtpBox" class="hidden">
+
+                <input
+                    type="text"
+                    id="registerOtp"
+                    placeholder="Enter OTP"
+                    maxlength="6"
+                >
+
+                <button onclick="nextStep(2)">Verify & Continue</button>
+
+            </div>
+
+        </div>
+
+        <div id="registerStep2" class="register-step hidden">
+
+            <h2>Personal Information</h2>
+
+            <input type="text" id="driverName" placeholder="Full Name">
+
+            <input type="date" id="dob">
+
+            <select id="gender">
+                <option value="">Select Gender</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+            </select>
+
+            <textarea
+                id="bio"
+                placeholder="Short Bio"
+            ></textarea>
+
+            <button onclick="nextStep(3)">Next</button>
+
+        </div>
+
+        <div id="registerStep3" class="register-step hidden">
+
+            <h2>Experience & Vehicle Details</h2>
+
+            <label>Driver Photo</label>
+            <input type="file" id="driverPhoto">
+
+            <input
+                type="number"
+                id="experience"
+                placeholder="Years of Experience"
+            >
+
+            <select id="vehicleType">
+                <option value="">Select Vehicle Type</option>
+                <option>Mini Truck</option>
+                <option>Pickup Truck</option>
+                <option>Light Truck</option>
+                <option>Heavy Truck</option>
+                <option>Container Truck</option>
+            </select>
+
+            <input
+                type="text"
+                id="vehicleModel"
+                placeholder="Vehicle Model"
+            >
+
+            <input
+                type="text"
+                id="vehicleNumber"
+                placeholder="Vehicle Number"
+            >
+
+            <input
+                type="text"
+                id="dlNumber"
+                placeholder="Driving Licence Number"
+            >
+
+            <input
+                type="text"
+                id="panNumber"
+                placeholder="PAN Number"
+            >
+
+            <button onclick="nextStep(4)">Next</button>
+
+        </div>
+
+
+        <!-- STEP 4 -->
+        <div id="registerStep4" class="register-step hidden">
+
+            <h2>Check Your Details</h2>
+
+            <div class="details-card">
+
+                <p><strong>Name:</strong>
+                    <span id="checkName"></span>
+                </p>
+
+                <p><strong>Date of Birth:</strong>
+                    <span id="checkDob"></span>
+                </p>
+
+                <p><strong>Gender:</strong>
+                    <span id="checkGender"></span>
+                </p>
+
+                <p><strong>Experience:</strong>
+                    <span id="checkExperience"></span>
+                </p>
+
+                <p><strong>Vehicle Type:</strong>
+                    <span id="checkVehicle"></span>
+                </p>
+
+                <p><strong>Vehicle Model:</strong>
+                    <span id="checkModel"></span>
+                </p>
+
+                <p><strong>Vehicle Number:</strong>
+                    <span id="checkNumber"></span>
+                </p>
+
+                <p><strong>DL Number:</strong>
+                    <span id="checkDL"></span>
+                </p>
+
+                <p><strong>PAN Number:</strong>
+                    <span id="checkPAN"></span>
+                </p>
+
+            </div>
+
+            <button onclick="startJourney()">Start Your Journey</button>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section id="verification" class="page">
+
+    <div class="verification-card">
+
+        <div class="loading-circle">✓</div>
+
+        <h1>Background Verification</h1>
+
+        <p>
+            Your driver registration is under verification.
+        </p>
+
+        <p>
+            Transmaa staff will verify your details and approve your profile.
+        </p>
+
+        <div class="status">
+            Verification in Progress
+        </div>
+
+        <button onclick="showPage('login')">
+            Back to Login
+        </button>
+
+    </div>
+
+</section>
+
+<section id="loads" class="page">
+
+    <div class="dashboard">
+
+        <h1>Available Loads</h1>
+
+        <p class="subtitle">
+            Search for available loads on your route.
+        </p>
+
+        <div class="route-search">
+
+            <input
+                type="text"
+                id="fromRoute"
+                placeholder="From - Sircilla"
+            >
+
+            <span>→</span>
+
+            <input
+                type="text"
+                id="toRoute"
+                placeholder="To - Hyderabad"
+            >
+
+            <button onclick="searchLoads()">Search</button>
+
+        </div>
+
+
+        <div id="loadResults">
+
+            <div class="load-card">
+
+                <div class="load-header">
+                    <h2>Sircilla → Hyderabad</h2>
+                    <span class="available">AVAILABLE</span>
+                </div>
+
+                <div class="load-info">
+
+                    <p>
+                        <strong>Goods:</strong>
+                        General
+                    </p>
+
+                    <p>
+                        <strong>Truck:</strong>
+                        Light Truck
+                    </p>
+
+                    <p>
+                        <strong>Weight:</strong>
+                        2 Tonnes
+                    </p>
+
+                    <p>
+                        <strong>Pickup:</strong>
+                        Sircilla
+                    </p>
+
+                </div>
+
+                <button onclick="acceptLoad('Sircilla → Hyderabad')">
+                    Accept Load
+                </button>
+
+            </div>
+
+
+            <div class="load-card">
+
+                <div class="load-header">
+                    <h2>Karimnagar → Hyderabad</h2>
+                    <span class="available">AVAILABLE</span>
+                </div>
+
+                <div class="load-info">
+
+                    <p>
+                        <strong>Goods:</strong>
+                        Furniture
+                    </p>
+
+                    <p>
+                        <strong>Truck:</strong>
+                        Heavy Truck
+                    </p>
+
+                    <p>
+                        <strong>Weight:</strong>
+                        5 Tonnes
+                    </p>
+
+                    <p>
+                        <strong>Pickup:</strong>
+                        Karimnagar
+                    </p>
+
+                </div>
+
+                <button onclick="acceptLoad('Karimnagar → Hyderabad')">
+                    Accept Load
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+<section id="accepted" class="page">
+
+    <div class="accepted-card">
+
+        <div class="success-icon">✓</div>
+
+        <h1>Load Accepted</h1>
+
+        <p>
+            You have successfully accepted this load.
+        </p>
+
+        <div class="accepted-route">
+            <h2 id="acceptedRoute">Sircilla → Hyderabad</h2>
+        </div>
+
+        <p>
+            Transmaa staff will confirm the pickup details.
+        </p>
+
+        <button onclick="showPage('history')">
+            View History
+        </button>
+
+    </div>
+
+</section>
+<section id="history" class="page">
+
+    <div class="dashboard">
+
+        <h1>Driver History</h1>
+
+        <div id="historyList">
+
+            <div class="history-card">
+
+                <div>
+                    <h3>Sircilla → Hyderabad</h3>
+                    <p>General Goods</p>
+                </div>
+
+                <span class="status-delivered">
+                    Delivered
+                </span>
+
+            </div>
+
+            <div class="history-card">
+
+                <div>
+                    <h3>Karimnagar → Hyderabad</h3>
+                    <p>Furniture</p>
+                </div>
+
+                <span class="status-way">
+                    On the Way
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<script src="driver.js"></script>
+
+</body>
+</html>
