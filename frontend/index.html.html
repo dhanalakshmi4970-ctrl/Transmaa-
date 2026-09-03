@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Transmaa - Commercial Vehicles</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- HEADER -->
+
+    <header class="app-header">
+
+        <div class="logo">
+            TRANS<span>MAA</span>
+        </div>
+
+        <div class="help">
+            ?
+        </div>
+
+    </header>
+
+
+    <!-- TITLE -->
+
+    <h1 class="page-title">
+        Commercial Vehicles
+    </h1>
+
+    <div class="orange-line"></div>
+
+
+    <!-- BUY / SELL BUTTONS -->
+
+    <div class="switch-buttons">
+
+    <button class="active-btn" id="buyBtn" onclick="showBuy()">
+        BUY
+    </button>
+
+    <button class="outline-btn" id="sellBtn" onclick="showSell()">
+        SELL
+    </button>
+
+    </div>
+
+
+    <!-- MAIN CONTENT -->
+
+    <div class="content-area">
+
+        <!-- BUY SECTION -->
+
+        <section class="buy-section" id="buySection">
+
+            <h2>Available Vehicles</h2>
+            <div class="search-container">
+                <input
+                    type="text"
+                    id="vehicleSearch"
+                    placeholder="🔍 Search vehicle..."
+                    onkeyup="filterVehicles()"
+                >
+            </div>
+            <div class="filter-container">
+
+                <select id="priceFilter" onchange="filterVehicles()">
+                    <option value="">All Prices</option>
+                    <option value="700000">Below ₹7 Lakh</option>
+                    <option value="1300000">Below ₹13 Lakh</option>
+                    <option value="2000000">Below ₹20 Lakh</option>
+                    <option value="3000000">Below ₹30 Lakh</option>
+                </select>
+
+                <select id="yearFilter" onchange="filterVehicles()">
+                    <option value="">All Years</option>
+                    <option value="2021">2021</option>
+                    <option value="2019">2019</option>
+                    <option value="2017">2017</option>
+                </select>
+
+            </div>
+            
+
+
+            <!-- VEHICLE 1 -->
+
+            <div class="vehicle-card">
+
+                <div class="vehicle-image">
+                    <img src="images/kia_carnival.jpg" alt="Kia Carnival">
+            </div>
+
+                <div class="vehicle-info">
+
+                    <h3>Kia</h3>
+
+                    <p>
+                        <b>Vehicle Model:</b><br>
+                        Carnival
+                    </p>
+                    <p>
+                        💰 <b>Price:</b><br>
+                        ₹28,50,000
+                    </p>
+
+                    <p>
+                        📍 <b>Location:</b><br>
+                        Chennai
+                    </p>
+
+                    <p>
+                        📅 <b>Years of Vehicle:</b><br>
+                        2021
+                    </p>
+
+                    <button class="interest-btn" onclick="showInterest('Kia Carnival')">
+                    Interested to buy
+                    </button>
+                    <button class="details-btn" onclick="showDetails('Kia Carnival', '₹28,50,000', 'Chennai', '2021')">
+                         View Details
+                    </button>
+                    <button class="favorite-btn" onclick="toggleFavorite(this)">
+                         ♡ Favorite
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- VEHICLE 2 -->
+
+            <div class="vehicle-card">
+
+                <div class="vehicle-image">
+                    <img src="images/mahindra_tuv300.jpg" alt="Mahindra TUV300">
+            </div>
+
+                <div class="vehicle-info">
+
+                    <h3>Mahindra</h3>
+
+                    <p>
+                        <b>Vehicle Model:</b><br>
+                        TUV300
+                    </p>
+                    <p>
+                        💰 <b>Price:</b><br>
+                        ₹8,50,000
+                    </p>
+
+                    <p>
+                        📍 <b>Location:</b><br>
+                        Chennai
+                    </p>
+
+                    <p>
+                        📅 <b>Years of Vehicle:</b><br>
+                        2017
+                    </p>
+
+                    <button class="interest-btn" onclick="showInterest('Mahindra TUV300')">
+                     Interested to buy
+                    </button>
+                    <button class="details-btn" onclick="showDetails('Mahindra TUV300', '₹8,50,000', 'Chennai', '2017')">
+                        View Details
+                    </button>
+                    <button class="favorite-btn" onclick="toggleFavorite(this)">
+                        ♡ Favorite
+                    </button>
+
+
+                </div>
+
+            </div>
+
+
+            <!-- VEHICLE 3 -->
+
+            <div class="vehicle-card">
+
+                <div class="vehicle-image">
+                    <img src="images/tata_alto.jpg" alt="Tata Alto">
+            </div>
+
+                <div class="vehicle-info">
+
+                    <h3>Tata</h3>
+
+                    <p>
+                        <b>Vehicle Model:</b><br>
+                        Alto
+                    </p>
+                    <p>
+                        💰 <b>Price:</b><br>
+                        ₹5,25,000
+                    </p>
+
+                    <p>
+                        📍 <b>Location:</b><br>
+                        Tambaram
+                    </p>
+
+                    <p>
+                        📅 <b>Years of Vehicle:</b><br>
+                        2017
+                    </p>
+
+                    <button class="interest-btn" onclick="showInterest('Tata Alto')">
+                    Interested to buy
+                    </button>
+                    <button class="details-btn" onclick="showDetails('Tata Alto', '₹5,25,000', 'Tambaram', '2017')">
+                        View Details
+                    </button>
+                    <button class="favorite-btn" onclick="toggleFavorite(this)">
+                        ♡ Favorite
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- VEHICLE 4 -->
+
+            <div class="vehicle-card">
+
+                <div class="vehicle-image">
+                    <img src="images/mahindra_xuv.jpg" alt="Mahindra XUV">
+            </div>
+
+                <div class="vehicle-info">
+
+                    <h3>Mahindra</h3>
+
+                    <p>
+                        <b>Vehicle Model:</b><br>
+                        XUV
+                    </p>
+                    <p>
+                        💰 <b>Price:</b><br>
+                        ₹12,75,000
+                        </p>
+
+                    <p>
+                        📍 <b>Location:</b><br>
+                        Coimbatore
+                    </p>
+
+                    <p>
+                        📅 <b>Years of Vehicle:</b><br>
+                        2019
+                    </p>
+
+                    <button class="interest-btn" onclick="showInterest('Mahindra XUV')">
+                    Interested to buy
+                    </button>
+                    <button class="details-btn" onclick="showDetails('Mahindra XUV', '₹12,75,000', 'Coimbatore', '2019')">
+                        View Details
+                    </button>
+                    <button class="favorite-btn" onclick="toggleFavorite(this)">
+                        ♡ Favorite
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- SELL SECTION -->
+
+        <section class="sell-section" id="sellSection">
+
+            <h2>Sell Your Vehicle</h2>
+
+            <!-- FORM -->
+
+            <form onsubmit="saveVehicle(event)">
+
+                <input
+                    type="text"
+                    placeholder="👤  Name"
+                >
+
+                <input
+                    type="tel"
+                    placeholder="📞  Phone Number"
+                >
+
+                <input
+                    type="text"
+                    placeholder="🚗  Vehicle No"
+                >
+
+                <input
+                    type="text"
+                    placeholder="🚗  Vehicle Model"
+                >
+
+                <input
+                    type="text"
+                    placeholder="📄  RC No"
+                >
+
+                <input
+                    type="number"
+                    placeholder="📅  Years of Vehicle"
+                >
+
+
+                <!-- IMAGE UPLOAD -->
+
+                <h3 class="upload-title">
+                    Upload Images
+                </h3>
+
+                <div class="upload-container">
+
+                    <div class="upload-box">
+
+                        <label>Front side</label>
+
+                        <div class="upload-icon" id="frontPreview">
+                            📷
+                        </div>
+
+                        <input type="file" accept="image/*"
+                               onchange="previewImage(this, 'frontPreview')">
+                    </div>
+
+
+                    <div class="upload-box">
+
+                        <label>Back side</label>
+
+                        <div class="upload-icon" id="backPreview">
+                            📷
+                        </div>
+
+                        <input type="file" accept="image/*"
+                               onchange="previewImage(this, 'backPreview')">
+                    </div>
+
+
+                    <div class="upload-box">
+
+                        <label>Right side</label>
+
+                        <div class="upload-icon" id="rightPreview">
+                           📷
+                        </div>
+
+                        <input type="file" accept="image/*"
+                               onchange="previewImage(this, 'rightPreview')">
+                        </div>
+
+                    <div class="upload-box">
+
+                        <label>Left side</label>
+
+                        <div class="upload-icon" id="leftPreview">
+                           📷
+                        </div>
+
+                        <input type="file" accept="image/*"
+                              onchange="previewImage(this, 'leftPreview')">
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="save-btn">
+                    Save Data
+                </button>
+
+            </form>
+        </section>
+
+    </div>
+
+
+
+    <!-- BOTTOM NAVIGATION -->
+
+    <footer class="bottom-nav">
+
+        <div>
+            🚚
+            <span>Loads</span>
+        </div>
+
+        <div class="selected">
+            🏷️
+            <span>Sell & Buy</span>
+        </div>
+
+        <div>
+            🏦
+            <span>Finance & Insurance</span>
+        </div>
+
+        <div>
+            ⛽
+            <span>Fuel</span>
+        </div>
+
+        <div>
+            🔄
+            <span>Privacy • Terms</span>
+        </div>
+
+    </footer>
+
+</div>
+<!-- VEHICLE DETAILS POPUP -->
+
+<div id="detailsPopup" class="details-popup">
+
+    <div class="popup-content">
+
+        <button class="close-popup" onclick="closeDetails()">
+            ×
+        </button>
+
+        <h2>Vehicle Details</h2>
+
+        <div id="popupDetails">
+        </div>
+
+        <button class="close-btn" onclick="closeDetails()">
+            Close
+        </button>
+
+    </div>
+
+</div>
+<script src="script.js"></script>
+
+</body>
+</html>
