@@ -1,42 +1,34 @@
 import React, { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
+import FinanceInsurance from './FinanceInsurance';
+import BuySell from './BuySell';
 import {
   Truck,
-  Tag,
-  Landmark,
-  Fuel,
-  RotateCw,
-  HelpCircle,
   User,
   Phone,
   Mail,
+  Lock,
   ArrowRight,
-  ArrowUpDown,
-  MapPin,
   Calendar,
-  Clock,
-  Package,
   CheckCircle2,
-  ChevronDown,
   ArrowLeft,
-  ShieldCheck,
-  Sparkles,
-  Search,
-  X,
-  UserCircle,
   Pencil,
-  History,
-  Navigation,
+  KeyRound,
+  MapPin,
+  HelpCircle,
+  ShieldCheck,
+  ChevronRight,
+  Plus,
+  Trash2,
+  X,
+  Landmark,
+  Tag,
+  Fuel,
+  ArrowUpDown,
+  Shield
 } from 'lucide-react';
 
-// ---------------------------------------------------------
-// BRAND
-// ---------------------------------------------------------
-const ORANGE = '#F37021';
-const PEACH_BG = '#FEF3EC';
 
-// ---------------------------------------------------------
-// DATA
-// ---------------------------------------------------------
 const GOODS_TYPES = [
   'Timber/Plywood/Laminate',
   'Electrical/Electronics/Home Appliances',
@@ -59,9 +51,9 @@ const TRUCK_TYPES = [
     dimensions: '10 ft x 5.5 ft x 6 ft',
     basePrice: 1850,
     eta: '5 mins away',
-    suitableFor:
-      'Small shifting, timber planks, appliances, catering kits',
+    suitableFor: 'Small shifting, timber planks, appliances, catering kits',
     badge: 'Popular',
+    image: 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=400&auto=format&fit=crop&q=60',
   },
   {
     id: 'open',
@@ -70,9 +62,9 @@ const TRUCK_TYPES = [
     dimensions: '14 ft x 6.5 ft x 7 ft',
     basePrice: 3400,
     eta: '10 mins away',
-    suitableFor:
-      'Agricultural loads, industrial equipment, timber logs',
+    suitableFor: 'Agricultural loads, industrial equipment, timber logs',
     badge: 'High Demand',
+    image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&auto=format&fit=crop&q=60',
   },
   {
     id: 'dumper',
@@ -81,8 +73,8 @@ const TRUCK_TYPES = [
     dimensions: '16 ft x 7 ft x 6.5 ft',
     basePrice: 4800,
     eta: '12 mins away',
-    suitableFor:
-      'Loose construction materials, sand, gravel, stone chips',
+    suitableFor: 'Loose construction materials, sand, gravel, stone chips',
+    image: 'https://images.unsplash.com/photo-1508873696983-2df515122519?w=400&auto=format&fit=crop&q=60',
   },
   {
     id: 'tipper',
@@ -91,8 +83,8 @@ const TRUCK_TYPES = [
     dimensions: '18 ft x 7.5 ft x 7 ft',
     basePrice: 6200,
     eta: '15 mins away',
-    suitableFor:
-      'Mining, quarry, cement bags, heavy building materials',
+    suitableFor: 'Mining, quarry, cement bags, heavy building materials',
+    image: 'https://images.unsplash.com/photo-1586191582056-a33e21820689?w=400&auto=format&fit=crop&q=60',
   },
   {
     id: 'container',
@@ -101,9 +93,9 @@ const TRUCK_TYPES = [
     dimensions: '20-32 ft HQ Closed',
     basePrice: 7900,
     eta: '20 mins away',
-    suitableFor:
-      'FMCG, electronics, export-import, waterproof transit',
+    suitableFor: 'FMCG, electronics, export-import, waterproof transit',
     badge: 'Weatherproof',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&auto=format&fit=crop&q=60',
   },
   {
     id: 'trailer',
@@ -112,8 +104,8 @@ const TRUCK_TYPES = [
     dimensions: '40 ft Flatbed / Highbed',
     basePrice: 11500,
     eta: '25 mins away',
-    suitableFor:
-      'Oversized steel coils, infrastructure, heavy transformers',
+    suitableFor: 'Oversized steel coils, infrastructure, heavy transformers',
+    image: 'https://images.unsplash.com/photo-1501700493788-df1a42922624?w=400&auto=format&fit=crop&q=60',
   },
   {
     id: 'multiaxle',
@@ -122,2931 +114,1421 @@ const TRUCK_TYPES = [
     dimensions: '28-32 ft Multi-Axle',
     basePrice: 9800,
     eta: '18 mins away',
-    suitableFor:
-      'Interstate commercial logistics & bulk machinery',
+    suitableFor: 'Interstate commercial logistics & bulk machinery',
+    image: 'https://images.unsplash.com/photo-1616432043562-3671ea2e5242?w=400&auto=format&fit=crop&q=60',
   },
 ];
 
-const PRESET_LOCATIONS = [
-  'Sircilla, Telangana (Textile Hub)',
-  'Hitech City, Hyderabad, Telangana',
-  'Gachibowli, Hyderabad, Telangana',
-  'Karimnagar Town, Telangana',
-  'Secunderabad Railway Station, Hyderabad',
-  'Jubilee Hills Checkpost, Hyderabad',
-  'Kazipet / Warangal Industrial Area',
-  'Nizamabad Market Yard, Telangana',
-];
+const renderStatusTracker = (status) => {
+  const steps = ['Order Waiting', 'Driver Assigned', 'In Transit', 'Delivered'];
+  const currentStepIndex = steps.indexOf(status) !== -1 ? steps.indexOf(status) : 0;
 
-// ---------------------------------------------------------
-// APP
-// ---------------------------------------------------------
+  return (
+    <div className="mt-6 border-t border-gray-100 pt-6">
+      <p className="mb-4 text-xs font-bold uppercase tracking-widest text-gray-400">Live Status Tracker</p>
+      <div className="flex items-center justify-between gap-3">
+        {steps.map((step, idx) => {
+          const isCompleted = idx <= currentStepIndex;
+          return (
+            <div key={step} className="flex flex-1 flex-col items-center text-center">
+              <div
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
+                  isCompleted
+                    ? 'bg-[#F37021] text-white ring-4 ring-orange-100'
+                    : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {idx + 1}
+              </div>
+              <span
+                className={`mt-2 text-[11px] leading-tight ${
+                  isCompleted ? 'font-bold text-gray-900' : 'text-gray-400'
+                }`}
+              >
+                {step}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 export default function App() {
   const [screen, setScreen] = useState('LOGIN');
 
-  const [navTab, setNavTab] = useState('loads');
-
-  // -------------------------------------------------------
-  // USER
-  // -------------------------------------------------------
-  const [customerName, setCustomerName] = useState('Sai');
-  const [customerPhone, setCustomerPhone] =
-    useState('9848012345');
-  const [customerEmail, setCustomerEmail] =
-    useState('sai@example.com');
-
-  // Registered users
-  const [registeredUsers, setRegisteredUsers] = useState([
-    {
-      name: 'Sai',
-      phone: '9848012345',
-      email: 'sai@example.com',
-    },
-  ]);
-
-  // Login/Register mode
+  // AUTH STATE
+  const [user, setUser] = useState(null);
+  const [customerName, setCustomerName] = useState('sai');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [authMode, setAuthMode] = useState('LOGIN');
   const [authError, setAuthError] = useState('');
 
-  // -------------------------------------------------------
-  // OTP
-  // -------------------------------------------------------
-  const [otpValues, setOtpValues] = useState([
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
+  // PROFILE MODALS & ADDRESSES
+  const [activeProfileModal, setActiveProfileModal] = useState(null);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
+  const [savedAddresses, setSavedAddresses] = useState([
+    { id: 1, title: 'Home Warehouse', address: 'Sircilla Main Road, Telangana' },
+    { id: 2, title: 'Office / Depot', address: 'Hitech City, Phase 2, Hyderabad' },
   ]);
+  const [newAddressTitle, setNewAddressTitle] = useState('');
+  const [newAddressText, setNewAddressText] = useState('');
 
-  const [otpTimer, setOtpTimer] = useState(60);
-  const [otpError, setOtpError] = useState('');
-
-  // -------------------------------------------------------
-  // LOCATIONS
-  // -------------------------------------------------------
-  const [fromLocation, setFromLocation] =
-    useState('Sircilla, Telangana');
-
-  const [toLocation, setToLocation] =
-    useState('Hitech city, Hyderabad');
-
-  const [locationModalType, setLocationModalType] =
-    useState(null);
-
-  const [searchLocationQuery, setSearchLocationQuery] =
-    useState('');
-
-  // -------------------------------------------------------
-  // BOOKING
-  // -------------------------------------------------------
-  const [bookingDate, setBookingDate] = useState(() => {
-    const d = new Date();
-    return d.toISOString().split('T')[0];
-  });
-
-  const [bookingTime, setBookingTime] =
-    useState('10:00 AM');
-
-  const [selectedGoodsType, setSelectedGoodsType] =
-    useState(GOODS_TYPES[0]);
-
-  const [selectedTruck, setSelectedTruck] =
-    useState(TRUCK_TYPES[0]);
-
-  // NEW: LOAD WEIGHT
+  // LOCATIONS & BOOKINGS
+  const [fromLocation, setFromLocation] = useState('');
+  const [toLocation, setToLocation] = useState('');
+  const [bookingDate, setBookingDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [bookingTime, setBookingTime] = useState('10:00');
+  const [selectedGoodsType, setSelectedGoodsType] = useState(GOODS_TYPES[0]);
+  const [selectedTruck, setSelectedTruck] = useState(TRUCK_TYPES[0]);
   const [loadWeight, setLoadWeight] = useState('');
+  const [expectedTransportationCost, setExpectedTransportationCost] = useState('');
 
-  // NEW: EXPECTED TRANSPORTATION COST
-  const [expectedTransportationCost, setExpectedTransportationCost] =
-    useState('');
+  const [profileMessage, setProfileMessage] = useState('');
+  const [bookingHistory, setBookingHistory] = useState([]);
+  const [currentPendingOrder, setCurrentPendingOrder] = useState(null);
+  const [selectedBookingDetail, setSelectedBookingDetail] = useState(null);
 
-  // -------------------------------------------------------
-  // PROFILE
-  // -------------------------------------------------------
-  const [profileEditMode, setProfileEditMode] =
-    useState(false);
-
-  const [profileMessage, setProfileMessage] =
-    useState('');
-
-  // -------------------------------------------------------
-  // HISTORY
-  // -------------------------------------------------------
-  const [bookingHistory, setBookingHistory] = useState([
-    {
-      id: 'TM-94281',
-      from: 'Karimnagar Market, Telangana',
-      to: 'Secunderabad Goods Shed, Hyderabad',
-      goodsType:
-        'Electrical/Electronics/Home Appliances',
-      weight: '3.5',
-      expectedTransportationCost: 800,
-      truck: TRUCK_TYPES[0],
-      vehicleFare: 1850,
-      fare: 2650,
-      date: '2026-08-25',
-      time: '09:00 AM',
-      status: 'Delivered',
-
-      // Tracking state
-      trackingStage: 4,
-    },
-    {
-      id: 'TM-88129',
-      from: 'Warangal Logistics Park',
-      to: 'Gachibowli, Hyderabad',
-      goodsType: 'Building/Construction',
-      weight: '8',
-      expectedTransportationCost: 1000,
-      truck: TRUCK_TYPES[1],
-      vehicleFare: 3400,
-      fare: 4400,
-      date: '2026-08-26',
-      time: '02:30 PM',
-      status: 'On the way',
-
-      // Tracking state
-      trackingStage: 2,
-    },
-  ]);
-
-  const [currentPendingOrder, setCurrentPendingOrder] =
-    useState(null);
-
-  // -------------------------------------------------------
-  // HELP
-  // -------------------------------------------------------
-  const [showHelpModal, setShowHelpModal] =
-    useState(false);
-
-  // -------------------------------------------------------
-  // OTP TIMER
-  // -------------------------------------------------------
+  // SUPABASE AUTH LISTENER
   useEffect(() => {
-    let interval;
-
-    if (screen === 'OTP' && otpTimer > 0) {
-      interval = setInterval(() => {
-        setOtpTimer((prev) => prev - 1);
-      }, 1000);
-    }
-
-    return () => clearInterval(interval);
-  }, [screen, otpTimer]);
-
-  // -------------------------------------------------------
-  // WAITING -> ACCEPTED
-  // -------------------------------------------------------
-  useEffect(() => {
-    if (
-      screen !== 'WAITING' ||
-      !currentPendingOrder
-    ) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      const acceptedOrder = {
-        ...currentPendingOrder,
-
-        // Staff has verified the booking
-        status: 'Accepted',
-
-        // Only first tracking stage is completed
-        trackingStage: 1,
-      };
-
-      setBookingHistory((prev) => [
-        acceptedOrder,
-        ...prev,
-      ]);
-
-      setCurrentPendingOrder(acceptedOrder);
-
-      setScreen('TRACKING');
-      setNavTab('loads');
-    }, 4000);
-
-    return () => clearTimeout(timer);
-  }, [screen, currentPendingOrder]);
-
-  // -------------------------------------------------------
-  // LOGIN
-  // -------------------------------------------------------
-  const handleLoginSubmit = (e) => {
-    if (e) {
-      e.preventDefault();
-    }
-
-    setAuthError('');
-
-    const cleanPhone =
-      customerPhone.replace(/\D/g, '');
-
-    if (cleanPhone.length !== 10) {
-      setAuthError(
-        'Please enter a valid 10-digit mobile number.'
-      );
-      return;
-    }
-
-    const existingUser = registeredUsers.find(
-      (user) => user.phone === cleanPhone
-    );
-
-    if (!existingUser) {
-      setAuthError(
-        "You don't have an account with this number. Please register first."
-      );
-      return;
-    }
-
-    setCustomerName(existingUser.name);
-    setCustomerPhone(existingUser.phone);
-    setCustomerEmail(existingUser.email);
-
-    setOtpTimer(60);
-
-    setOtpValues([
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-    ]);
-
-    setOtpError('');
-    setScreen('OTP');
-  };
-
-  // -------------------------------------------------------
-  // REGISTER
-  // -------------------------------------------------------
-  const handleRegisterSubmit = (e) => {
-    if (e) {
-      e.preventDefault();
-    }
-
-    setAuthError('');
-
-    const cleanPhone =
-      customerPhone.replace(/\D/g, '');
-
-    if (!customerName.trim()) {
-      setAuthError(
-        'Please enter your name.'
-      );
-      return;
-    }
-
-    if (cleanPhone.length !== 10) {
-      setAuthError(
-        'Please enter a valid 10-digit mobile number.'
-      );
-      return;
-    }
-
-    if (
-      !customerEmail.trim() ||
-      !customerEmail.includes('@')
-    ) {
-      setAuthError(
-        'Please enter a valid email address.'
-      );
-      return;
-    }
-
-    const alreadyRegistered =
-      registeredUsers.some(
-        (user) => user.phone === cleanPhone
-      );
-
-    if (alreadyRegistered) {
-      setAuthError(
-        'An account already exists with this number. Please login.'
-      );
-      return;
-    }
-
-    const newUser = {
-      name: customerName.trim(),
-      phone: cleanPhone,
-      email: customerEmail.trim(),
-    };
-
-    setRegisteredUsers((prev) => [
-      ...prev,
-      newUser,
-    ]);
-
-    // DIRECTLY GO TO HOME
-    setScreen('HOME');
-    setNavTab('loads');
-    setAuthMode('LOGIN');
-    setAuthError('');
-  };
-
-  // -------------------------------------------------------
-  // OTP
-  // -------------------------------------------------------
-  const handleVerifyOtp = (e) => {
-    if (e) {
-      e.preventDefault();
-    }
-
-    const entered = otpValues.join('');
-
-    if (entered.length !== 6) {
-      setOtpError(
-        'Please enter full 6-digit OTP'
-      );
-      return;
-    }
-
-    setOtpError('');
-    setScreen('HOME');
-    setNavTab('loads');
-  };
-
-  const handleResendOtp = () => {
-    if (otpTimer !== 0) {
-      return;
-    }
-
-    setOtpTimer(60);
-
-    setOtpValues([
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-    ]);
-
-    setOtpError('');
-  };
-
-  const handleOtpBoxChange = (
-    index,
-    value
-  ) => {
-    if (value && !/^\d$/.test(value)) {
-      return;
-    }
-
-    const updated = [...otpValues];
-
-    updated[index] = value;
-
-    setOtpValues(updated);
-
-    if (value && index < 5) {
-      const nextInput =
-        document.getElementById(
-          `otp-box-${index + 1}`
-        );
-
-      if (nextInput) {
-        nextInput.focus();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser(user);
+        setCustomerEmail(user.email || '');
+        setCustomerName(user.user_metadata?.name || 'sai');
+        setCustomerPhone(user.user_metadata?.phone || '');
+        setScreen('HOME');
+        fetchUserBookings(user.id);
       }
-    }
-  };
+    });
 
-  const handleOtpKeyDown = (
-    index,
-    e
-  ) => {
-    if (
-      e.key === 'Backspace' &&
-      !otpValues[index] &&
-      index > 0
-    ) {
-      const previousInput =
-        document.getElementById(
-          `otp-box-${index - 1}`
-        );
-
-      if (previousInput) {
-        previousInput.focus();
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) {
+        setCustomerEmail(currentUser.email || '');
+        setCustomerName(currentUser.user_metadata?.name || 'sai');
+        setCustomerPhone(currentUser.user_metadata?.phone || '');
+        fetchUserBookings(currentUser.id);
+      } else {
+        setScreen('LOGIN');
       }
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const fetchUserBookings = async (userId) => {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setBookingHistory(data);
     }
   };
 
-  // -------------------------------------------------------
-  // LOCATIONS
-  // -------------------------------------------------------
   const handleSwapLocations = () => {
     const temp = fromLocation;
-
     setFromLocation(toLocation);
     setToLocation(temp);
   };
 
-  const handleLocationConfirm = () => {
-    if (!fromLocation || !toLocation) {
-      alert(
-        'Please select both pickup and dropoff locations'
-      );
-      return;
-    }
+  const handleRegisterSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setAuthError('');
 
-    setScreen('CHOOSE_TRUCK');
-  };
-
-  // -------------------------------------------------------
-  // BOOKING
-  // -------------------------------------------------------
-  const handleBookPickup = () => {
-    if (
-      !loadWeight ||
-      Number(loadWeight) <= 0
-    ) {
-      alert(
-        'Please enter the weight of your load.'
-      );
-      return;
-    }
-
-    if (
-      expectedTransportationCost === '' ||
-      Number(expectedTransportationCost) < 0
-    ) {
-      alert(
-        'Please enter your expected transportation cost.'
-      );
-      return;
-    }
-
-    const maxCapacity =
-      parseFloat(
-        selectedTruck.capacity.split('–')[1]
-      );
-
-    if (
-      Number(loadWeight) >
-      maxCapacity
-    ) {
-      alert(
-        `The selected vehicle has a maximum capacity of approximately ${maxCapacity} tons. Please choose another vehicle.`
-      );
-      return;
-    }
-
-    setScreen('CONFIRM');
-  };
-
-  const handleConfirmPickup = () => {
-    const vehicleFare =
-      selectedTruck.basePrice;
-
-    const transportationCost =
-      Number(expectedTransportationCost);
-
-    const totalFare =
-      vehicleFare + transportationCost;
-
-    const newOrder = {
-      id:
-        'TM-' +
-        Math.floor(
-          10000 +
-            Math.random() * 90000
-        ),
-
-      from: fromLocation,
-      to: toLocation,
-
-      goodsType: selectedGoodsType,
-
-      weight: loadWeight,
-
-      expectedTransportationCost:
-        transportationCost,
-
-      truck: selectedTruck,
-
-      vehicleFare,
-
-      fare: totalFare,
-
-      date: bookingDate,
-      time: bookingTime,
-
-      status: 'Order Waiting',
-
-      createdAt:
-        new Date().toLocaleTimeString(
-          [],
-          {
-            hour: '2-digit',
-            minute: '2-digit',
-          }
-        ),
-
-      // Before staff verification
-      trackingStage: 0,
-    };
-
-    setCurrentPendingOrder(newOrder);
-    setScreen('WAITING');
-  };
-
-  const handleCancelWaiting = () => {
-    setCurrentPendingOrder(null);
-    setScreen('CHOOSE_TRUCK');
-  };
-
-  // -------------------------------------------------------
-  // PROFILE UPDATE
-  // -------------------------------------------------------
-  const handleSaveProfile = () => {
-    const cleanPhone =
-      customerPhone.replace(/\D/g, '');
-
-    if (!customerName.trim()) {
-      setProfileMessage(
-        'Name cannot be empty.'
-      );
+    const cleanPhone = customerPhone.replace(/\D/g, '');
+    if (!customerName.trim() || !customerEmail.trim() || !password) {
+      setAuthError('Please fill in all required fields.');
       return;
     }
 
     if (cleanPhone.length !== 10) {
-      setProfileMessage(
-        'Please enter a valid 10-digit phone number.'
-      );
+      setAuthError('Please enter a valid 10-digit phone number.');
       return;
     }
 
-    if (
-      !customerEmail.trim() ||
-      !customerEmail.includes('@')
-    ) {
-      setProfileMessage(
-        'Please enter a valid email address.'
-      );
+    const { data, error } = await supabase.auth.signUp({
+      email: customerEmail,
+      password: password,
+      options: {
+        data: { name: customerName, phone: cleanPhone },
+      },
+    });
+
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setUser(data.user);
+      setScreen('HOME');
+    }
+  };
+
+  const handleLoginSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setAuthError('');
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: customerEmail,
+      password: password,
+    });
+
+    if (error) {
+      setAuthError(error.message);
+    } else {
+      setUser(data.user);
+      setScreen('HOME');
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setScreen('LOGIN');
+  };
+
+  const handleSaveProfile = async () => {
+    setProfileMessage('');
+    const cleanPhone = customerPhone.replace(/\D/g, '');
+
+    if (!customerName.trim()) {
+      setProfileMessage('Name cannot be empty.');
       return;
     }
 
-    const updatedUser = {
-      name: customerName.trim(),
-      phone: cleanPhone,
-      email: customerEmail.trim(),
+    if (cleanPhone.length !== 10) {
+      setProfileMessage('Please enter a valid 10-digit phone number.');
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      email: customerEmail,
+      data: { name: customerName, phone: cleanPhone },
+    });
+
+    if (error) {
+      setProfileMessage(`Error: ${error.message}`);
+    } else {
+      setProfileMessage('Profile updated successfully!');
+      setTimeout(() => {
+        setProfileMessage('');
+        setActiveProfileModal(null);
+      }, 1500);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (!oldPassword || !newPassword) {
+      setPasswordError('Please provide both current and new passwords.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters.');
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: oldPassword,
+    });
+
+    if (signInError) {
+      setPasswordError('Incorrect old password. Please check and try again.');
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) {
+      setPasswordError(updateError.message);
+    } else {
+      setPasswordSuccess('Password updated successfully!');
+      setOldPassword('');
+      setNewPassword('');
+      setTimeout(() => {
+        setPasswordSuccess('');
+        setActiveProfileModal(null);
+      }, 1500);
+    }
+  };
+
+  const handleAddAddress = () => {
+    if (!newAddressTitle.trim() || !newAddressText.trim()) return;
+    setSavedAddresses([
+      ...savedAddresses,
+      { id: Date.now(), title: newAddressTitle, address: newAddressText },
+    ]);
+    setNewAddressTitle('');
+    setNewAddressText('');
+  };
+
+  const handleDeleteAddress = (id) => {
+    setSavedAddresses(savedAddresses.filter((item) => item.id !== id));
+  };
+
+  const handleConfirmPickup = async () => {
+    if (!user) {
+      alert('You must be logged in to create a booking.');
+      return;
+    }
+
+    const vehicleFare = selectedTruck.basePrice;
+    const transportationCost = Number(expectedTransportationCost) || 0;
+    const totalFare = vehicleFare + transportationCost;
+
+    const newBooking = {
+      user_id: user.id,
+      from_location: fromLocation || 'Sircilla, Telangana',
+      to_location: toLocation || 'Hitech City, Hyderabad',
+      goods_type: selectedGoodsType,
+      weight: Number(loadWeight) || 0,
+      expected_cost: transportationCost,
+      truck_name: selectedTruck.name,
+      vehicle_fare: vehicleFare,
+      fare: totalFare,
+      booking_date: bookingDate,
+      booking_time: bookingTime,
+      status: 'Order Waiting',
     };
 
-    setRegisteredUsers((prev) =>
-      prev.map((user) =>
-        user.phone === customerPhone ||
-        user.phone === cleanPhone
-          ? updatedUser
-          : user
-      )
-    );
+    const { data, error } = await supabase.from('bookings').insert([newBooking]).select();
 
-    setCustomerPhone(cleanPhone);
-
-    setProfileEditMode(false);
-
-    setProfileMessage(
-      'Profile updated successfully.'
-    );
-
-    setTimeout(() => {
-      setProfileMessage('');
-    }, 2500);
-  };
-
-  // -------------------------------------------------------
-  // TRACKING
-  // -------------------------------------------------------
-  const trackingSteps = [
-    {
-      title: 'Booking Confirmed',
-      description:
-        'Your booking has been confirmed by Transmaa.',
-    },
-    {
-      title: 'Vehicle Assigned',
-      description:
-        'A suitable verified vehicle will be assigned.',
-    },
-    {
-      title: 'Driver On the Way',
-      description:
-        'The assigned driver is travelling to the pickup location.',
-    },
-    {
-      title: 'Goods Picked Up',
-      description:
-        'Your goods have been collected from the pickup location.',
-    },
-    {
-      title: 'Delivered',
-      description:
-        'Your goods have reached the destination.',
-    },
-  ];
-
-  const getTrackingStage =
-    currentPendingOrder?.trackingStage ??
-    0;
-
-  const openTracking = (order) => {
-    setCurrentPendingOrder(order);
-    setScreen('TRACKING');
-  };
-
-  // -------------------------------------------------------
-  // BOTTOM NAV
-  // -------------------------------------------------------
-  const handleBottomNavClick = (
-    tabId
-  ) => {
-    setNavTab(tabId);
-
-    if (tabId === 'loads') {
-      if (
-        screen !== 'LOGIN' &&
-        screen !== 'OTP'
-      ) {
-        setScreen('HOME');
-      }
-
-      return;
-    }
-
-    if (tabId === 'privacy') {
-      alert(
-        'Transmaa Privacy & Terms: 100% verified carriers, encrypted payments, and 24/7 goods insurance under Transmaa Shield.'
-      );
-
-      return;
-    }
-
-    alert(
-      `${tabId
-        .toUpperCase()
-        .replace('_', ' ')}: Feature active in your area. Contact Transmaa Fleet Support for partner rates.`
-    );
-  };
-
-  // -------------------------------------------------------
-  // STATUS BADGE
-  // -------------------------------------------------------
-  const getStatusClass = (
-    status
-  ) => {
-    switch (status) {
-      case 'Order Waiting':
-        return 'bg-amber-100 text-amber-800 border-amber-300';
-
-      case 'Accepted':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-
-      case 'On the way':
-        return 'bg-orange-100 text-orange-800 border-orange-300';
-
-      case 'Delivered':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+    if (error) {
+      alert(`Error creating booking: ${error.message}`);
+    } else {
+      setCurrentPendingOrder(data[0]);
+      setBookingHistory((prev) => [data[0], ...prev]);
+      setScreen('WAITING');
     }
   };
 
-  // -------------------------------------------------------
-  // AUTH SCREEN
-  // -------------------------------------------------------
   const renderAuthScreen = () => {
-    const isRegister =
-      authMode === 'REGISTER';
+    const isRegister = authMode === 'REGISTER';
 
     return (
-      <div className="mx-auto flex min-h-[calc(100vh-160px)] w-full max-w-md flex-col justify-center">
-        <div
-          className="mb-6 rounded-3xl border border-orange-200 p-6 text-center shadow-sm sm:p-8"
-          style={{
-            backgroundColor: PEACH_BG,
-          }}
-        >
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F37021] text-white shadow-lg shadow-orange-500/30">
-            <Truck className="h-9 w-9" />
+      <div className="mx-auto flex min-h-[calc(100vh-160px)] w-full max-w-md flex-col justify-center px-4 py-10">
+        <div className="mb-6 rounded-2xl border border-orange-200 bg-[#FEF3EC] p-8 text-center shadow-xs">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F37021] text-white shadow-md">
+            <Truck className="h-8 w-8" />
           </div>
 
-          <h1 className="text-3xl font-black text-black sm:text-4xl">
-            Tran
-            <span className="text-[#F37021]">
-              SMAA
-            </span>
+          <h1 className="text-3xl font-black text-black">
+            Tran<span className="text-[#F37021]">SMAA</span>
           </h1>
 
-          <p className="mt-2 flex items-center justify-center gap-2 text-lg font-bold text-slate-800">
-            {isRegister
-              ? 'Create your account'
-              : 'Welcome'}
-            <span>❤️</span>
-          </p>
-
-          <p className="mt-1 text-sm font-medium text-slate-600">
-            Customer Truck & Household
-            Shifting
+          <p className="mt-2 text-base font-bold text-gray-800">
+            {isRegister ? 'Create your account' : 'Welcome Back'} ❤️
           </p>
         </div>
 
-        <form
-          onSubmit={
-            isRegister
-              ? handleRegisterSubmit
-              : handleLoginSubmit
-          }
-          className="space-y-5"
-        >
-          {/* NAME */}
-          <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-600">
-              Customer Name
-            </label>
+        <form onSubmit={isRegister ? handleRegisterSubmit : handleLoginSubmit} className="space-y-4">
+          {isRegister && (
+            <>
+              <div>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
+                  Customer Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
+                  <input
+                    type="text"
+                    required
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Sai Kumar"
+                    className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-12 pr-4 text-sm font-semibold text-black outline-none focus:border-[#F37021]"
+                  />
+                </div>
+              </div>
 
+              <div>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
+                  <input
+                    type="tel"
+                    required
+                    maxLength={10}
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
+                    placeholder="9848012345"
+                    className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-12 pr-4 text-sm font-semibold text-black outline-none focus:border-[#F37021]"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
+              Email Address
+            </label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
-
+              <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
               <input
-                type="text"
+                type="email"
                 required
-                value={customerName}
-                onChange={(e) => {
-                  setCustomerName(
-                    e.target.value
-                  );
-                  setAuthError('');
-                }}
-                placeholder="Enter your name"
-                className="w-full rounded-xl border border-[#F37021] bg-white py-3.5 pl-12 pr-4 text-sm font-semibold text-black outline-none transition focus:ring-2 focus:ring-[#F37021]"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-12 pr-4 text-sm font-semibold text-black outline-none focus:border-[#F37021]"
               />
             </div>
           </div>
 
-          {/* PHONE */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-600">
-              Phone Number
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-500">
+              Password
             </label>
-
-            <div className="flex overflow-hidden rounded-xl border border-[#F37021] bg-white focus-within:ring-2 focus-within:ring-[#F37021]">
-              <div className="flex shrink-0 items-center gap-2 border-r border-orange-200 bg-orange-50 px-3 font-bold text-slate-800">
-                <Phone className="h-4 w-4 text-[#F37021]" />
-                +91
-              </div>
-
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
               <input
-                type="tel"
+                type="password"
                 required
-                maxLength={10}
-                value={customerPhone}
-                onChange={(e) => {
-                  setCustomerPhone(
-                    e.target.value.replace(
-                      /\D/g,
-                      ''
-                    )
-                  );
-                  setAuthError('');
-                }}
-                placeholder="9848012345"
-                className="min-w-0 flex-1 bg-white px-3 py-3.5 text-sm font-bold tracking-wider text-black outline-none"
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-12 pr-4 text-sm font-semibold text-black outline-none focus:border-[#F37021]"
               />
             </div>
           </div>
 
-          {/* EMAIL ONLY REGISTER */}
-          {isRegister && (
-            <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-600">
-                Email Address
-              </label>
-
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
-
-                <input
-                  type="email"
-                  required
-                  value={customerEmail}
-                  onChange={(e) => {
-                    setCustomerEmail(
-                      e.target.value
-                    );
-                    setAuthError('');
-                  }}
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl border border-[#F37021] bg-white py-3.5 pl-12 pr-4 text-sm font-semibold text-black outline-none transition focus:ring-2 focus:ring-[#F37021]"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* ERROR */}
           {authError && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-600">
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-600">
               {authError}
-            </div>
-          )}
-
-          {!isRegister && (
-            <div className="rounded-xl border border-orange-100 bg-orange-50 p-3 text-xs font-medium text-slate-600">
-              ⚡ Demo: You will receive a
-              6-digit OTP on the next screen.
-            </div>
-          )}
-
-          {isRegister && (
-            <div className="rounded-xl border border-orange-100 bg-orange-50 p-3 text-xs font-medium text-slate-600">
-              Create your Transmaa account
-              using your name, mobile number
-              and email.
             </div>
           )}
 
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F37021] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:bg-[#D95D12] active:scale-[0.99]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F37021] px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-[#D95D12]"
           >
-            {isRegister
-              ? 'Register & Continue'
-              : 'Login'}
-
+            {isRegister ? 'Register & Continue' : 'Login'}
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>
 
-        {/* SWITCH LOGIN / REGISTER */}
         <div className="mt-6 text-center">
-          {isRegister ? (
-            <p className="text-sm text-slate-500">
-              Already have an account?
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode('LOGIN');
-                  setAuthError('');
-                }}
-                className="ml-1 font-black text-[#F37021] hover:underline"
-              >
-                Login
-              </button>
-            </p>
-          ) : (
-            <p className="text-sm text-slate-500">
-              Don't have an account?
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode('REGISTER');
-                  setAuthError('');
-                }}
-                className="ml-1 font-black text-[#F37021] hover:underline"
-              >
-                Register
-              </button>
-            </p>
-          )}
+          <p className="text-xs text-gray-500">
+            {isRegister ? 'Already have an account?' : "Don't have an account?"}
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode(isRegister ? 'LOGIN' : 'REGISTER');
+                setAuthError('');
+              }}
+              className="ml-2 font-black text-[#F37021] hover:underline"
+            >
+              {isRegister ? 'Login' : 'Register'}
+            </button>
+          </p>
         </div>
       </div>
     );
   };
 
-  // -------------------------------------------------------
-  // RENDER
-  // -------------------------------------------------------
+  const renderProfileScreen = () => {
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <button
+          type="button"
+          onClick={() => setScreen('HOME')}
+          className="flex items-center gap-2 text-xs font-bold text-[#F37021] hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+        </button>
+
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-2xl font-black text-[#F37021]">
+            {customerName ? customerName.charAt(0).toUpperCase() : 'U'}
+          </div>
+          <div className="text-center sm:text-left space-y-1 flex-1 min-w-0">
+            <h2 className="text-2xl font-black text-black truncate">{customerName || 'Transmaa Customer'}</h2>
+            <p className="text-xs font-medium text-gray-500 truncate">{customerEmail}</p>
+            <p className="text-xs font-medium text-gray-500 truncate">+91 {customerPhone || 'Not provided'}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveProfileModal('EDIT_PROFILE')}
+            className="flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50/50 px-4 py-2 text-xs font-bold text-[#F37021] hover:bg-orange-100 transition"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Edit Profile
+          </button>
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-xs divide-y divide-gray-100">
+          <button
+            type="button"
+            onClick={() => setActiveProfileModal('EDIT_PROFILE')}
+            className="w-full flex items-center justify-between p-4 hover:bg-orange-50/30 transition text-left"
+          >
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="p-2.5 rounded-xl bg-orange-100 text-[#F37021] shrink-0">
+                <User className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-black truncate">Personal Information</p>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">Update name, phone number & email</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveProfileModal('CHANGE_PASSWORD')}
+            className="w-full flex items-center justify-between p-4 hover:bg-orange-50/30 transition text-left"
+          >
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="p-2.5 rounded-xl bg-orange-100 text-[#F37021] shrink-0">
+                <KeyRound className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-black truncate">Change Password & Security</p>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">Manage login credentials and account safety</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveProfileModal('SAVED_ADDRESSES')}
+            className="w-full flex items-center justify-between p-4 hover:bg-orange-50/30 transition text-left"
+          >
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="p-2.5 rounded-xl bg-orange-100 text-[#F37021] shrink-0">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-black truncate">Saved Addresses</p>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">Save frequent pickup & dropoff spots</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveProfileModal('HELP_SUPPORT')}
+            className="w-full flex items-center justify-between p-4 hover:bg-orange-50/30 transition text-left"
+          >
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="p-2.5 rounded-xl bg-orange-100 text-[#F37021] shrink-0">
+                <HelpCircle className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-black truncate">Help & Customer Support</p>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">24/7 hotline, WhatsApp support & FAQs</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveProfileModal('TERMS_PRIVACY')}
+            className="w-full flex items-center justify-between p-4 hover:bg-orange-50/30 transition text-left"
+          >
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="p-2.5 rounded-xl bg-orange-100 text-[#F37021] shrink-0">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-black truncate">Terms & Privacy Policy</p>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">Safety guidelines and legal terms</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-gray-300 shrink-0" />
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="w-full rounded-xl border border-rose-200 bg-rose-50 py-3 text-xs font-bold text-rose-600 hover:bg-rose-100 transition"
+        >
+          Log Out of Transmaa
+        </button>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen w-full bg-slate-100 font-sans text-slate-900 antialiased">
-      <div className="min-h-screen w-full bg-white">
-
-        {/* =================================================
-            HEADER
-            ================================================= */}
-        <header className="sticky top-0 z-40 border-b border-orange-100 bg-white shadow-sm">
-          <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-
-            {/* LOGO */}
-            <button
-              type="button"
-              onClick={() => {
-                if (
-                  screen !== 'LOGIN' &&
-                  screen !== 'OTP'
-                ) {
-                  setScreen('HOME');
-                  setNavTab('loads');
-                }
-              }}
-              className="flex select-none items-center"
-            >
-              <span className="text-2xl font-black tracking-tight text-black sm:text-3xl">
-                Tran
-              </span>
-
-              <span className="relative text-2xl font-black tracking-tight text-black sm:text-3xl">
-                S
-
-                <span
-                  className="absolute left-1/2 top-0 h-2 w-4 -translate-x-1/2 -rotate-12 rounded-full"
-                  style={{
-                    backgroundColor:
-                      ORANGE,
-                  }}
-                />
-              </span>
-
-              <span className="text-2xl font-black tracking-tight text-black sm:text-3xl">
-                MAA
-              </span>
-            </button>
-
-            {/* DESKTOP HEADER */}
-            <div className="hidden items-center gap-6 md:flex">
-              {screen !== 'LOGIN' &&
-                screen !== 'OTP' && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setScreen('HOME')
-                      }
-                      className={`text-sm font-bold ${
-                        navTab === 'loads'
-                          ? 'text-[#F37021]'
-                          : 'text-slate-500'
-                      }`}
-                    >
-                      Loads
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleBottomNavClick(
-                          'sell_buy'
-                        )
-                      }
-                      className="text-sm font-semibold text-slate-500 hover:text-[#F37021]"
-                    >
-                      Sell & Buy
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleBottomNavClick(
-                          'finance'
-                        )
-                      }
-                      className="text-sm font-semibold text-slate-500 hover:text-[#F37021]"
-                    >
-                      Finance
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleBottomNavClick(
-                          'fuel'
-                        )
-                      }
-                      className="text-sm font-semibold text-slate-500 hover:text-[#F37021]"
-                    >
-                      Fuel
-                    </button>
-
-                    {/* PROFILE */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setScreen('PROFILE')
-                      }
-                      className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-[#F37021]"
-                    >
-                      <UserCircle className="h-5 w-5" />
-                      Profile
-                    </button>
-                  </>
-                )}
+    <div className="flex min-h-screen w-full bg-[#F5F5F5]">
+      {/* SIDEBAR */}
+      {user && (
+        <aside className="flex w-64 flex-col justify-between border-r border-gray-200 bg-white p-5 shrink-0">
+          <div className="space-y-6">
+            <div className="flex items-center gap-1.5 px-2 py-1">
+              <button 
+                type="button" 
+                onClick={() => setScreen('HOME')}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className="text-xl font-black tracking-tight text-black">
+                  Tran<span className="text-[#F37021]">SMAA</span>
+                </span>
+              </button>
             </div>
 
-            {/* HELP */}
+            <nav className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setScreen('HOME')}
+                className={`flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-xs font-bold transition ${
+                  screen === 'HOME' || screen === 'CHOOSE_TRUCK'
+                    ? 'bg-[#FEF3EC] text-[#F37021]'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Truck className="h-4 w-4" />
+                <span>Loads</span>
+              </button>
+
+              <button
+  type="button"
+  onClick={() => setScreen('BUY_SELL')}
+  className={`flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-xs font-semibold transition ${
+    screen === 'BUY_SELL'
+      ? 'bg-[#FEF3EC] text-[#F37021]'
+      : 'text-gray-600 hover:bg-gray-50'
+  }`}
+>
+  <Tag className="h-4 w-4 text-gray-400" />
+  <span>Sell & Buy</span>
+</button>
+
+              <button
+                type="button"
+                onClick={() => setScreen('FINANCE_INSURANCE')}
+                className={`flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-xs font-semibold transition ${
+                  screen === 'FINANCE_INSURANCE'
+                    ? 'bg-[#FEF3EC] text-[#F37021]'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Landmark className="h-4 w-4 text-gray-400" />
+                <span>Finance & Insurance</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => alert('Fuel module selected!')}
+                className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"
+              >
+                <Fuel className="h-4 w-4 text-gray-400" />
+                <span>Fuel</span>
+              </button>
+            </nav>
+          </div>
+
+          <div className="border-t border-gray-100 pt-4 space-y-3">
             <button
               type="button"
-              onClick={() =>
-                setShowHelpModal(true)
-              }
-              className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#F37021] text-[#F37021] transition hover:bg-orange-50 active:scale-95"
-              title="Help & Support"
+              onClick={() => setActiveProfileModal('TERMS_PRIVACY')}
+              className="flex items-center gap-2 text-[11px] font-medium text-gray-400 hover:text-gray-600 transition"
             >
-              <HelpCircle className="h-5 w-5" />
+              <Shield className="h-3.5 w-3.5" />
+              <span>Privacy • Terms</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setScreen('PROFILE')}
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-gray-50 hover:bg-orange-50 transition border border-gray-200"
+            >
+              <div className="h-7 w-7 rounded-full bg-[#F37021] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                {customerName ? customerName.charAt(0).toUpperCase() : 'S'}
+              </div>
+              <div className="text-left overflow-hidden min-w-0">
+                <p className="text-xs font-bold text-gray-800 truncate">{customerName}</p>
+                <p className="text-[10px] text-gray-400 truncate">{customerEmail || 'sai@gmail.com'}</p>
+              </div>
             </button>
           </div>
+        </aside>
+      )}
+
+      {/* WORKSPACE */}
+      <div className="flex flex-1 flex-col min-w-0">
+        <header className="flex items-center justify-end border-b border-gray-200 bg-white px-8 py-3.5 gap-3">
+          {user && (
+            <button
+              type="button"
+              onClick={() => setScreen('HISTORY')}
+              className="rounded-lg border border-orange-200 bg-orange-50/50 px-3 py-1.5 text-xs font-bold text-[#F37021] hover:bg-orange-100 transition"
+            >
+              Bookings ({bookingHistory.length})
+            </button>
+          )}
+          <button 
+            type="button"
+            onClick={() => user && setScreen('PROFILE')}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 transition"
+          >
+            <HelpCircle className="h-4 w-4" />
+          </button>
         </header>
 
-        {/* =================================================
-            MAIN
-            ================================================= */}
-        <main className="w-full">
-          <div className="mx-auto w-full max-w-7xl px-3 pb-28 pt-4 sm:px-5 sm:pt-6 lg:px-8">
+        <main className="mx-auto w-full max-w-5xl px-8 py-6 space-y-4">
+          {!user ? (
+            renderAuthScreen()
+          ) : (
+            <>
+              {screen === 'PROFILE' && renderProfileScreen()}
 
-            {/* =================================================
-                LOGIN / REGISTER
-                ================================================= */}
-            {(screen === 'LOGIN' ||
-              screen === 'REGISTER') &&
-              renderAuthScreen()}
+              {screen === 'FINANCE_INSURANCE' && (
+                <FinanceInsurance onBack={() => setScreen('HOME')} user={user} />
+              )}
 
-            {/* =================================================
-                OTP
-                ================================================= */}
-            {screen === 'OTP' && (
-              <div className="mx-auto flex min-h-[calc(100vh-160px)] w-full max-w-md flex-col justify-center">
+              {screen === 'HOME' && (
+                <div className="space-y-4">
+                  <h2 className="text-xl font-bold text-gray-900">Hi {customerName}</h2>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setScreen('LOGIN')
-                  }
-                  className="mb-5 flex w-fit items-center gap-1 text-sm font-bold text-[#F37021] hover:underline"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Login
-                </button>
-
-                <div
-                  className="mb-6 rounded-3xl border border-orange-200 p-6 text-center"
-                  style={{
-                    backgroundColor:
-                      PEACH_BG,
-                  }}
-                >
-                  <h2 className="text-2xl font-black text-black">
-                    OTP Verification
-                  </h2>
-
-                  <p className="mt-2 text-sm text-slate-600">
-                    Enter the 6-digit OTP sent
-                    to
-                    <strong className="ml-1 text-black">
-                      +91 {customerPhone}
-                    </strong>
-                  </p>
-                </div>
-
-                <div className="mx-auto flex w-full max-w-sm justify-between gap-2 sm:gap-3">
-                  {otpValues.map(
-                    (value, index) => (
-                      <input
-                        key={index}
-                        id={`otp-box-${index}`}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={value}
-                        onChange={(e) =>
-                          handleOtpBoxChange(
-                            index,
-                            e.target.value
-                          )
-                        }
-                        onKeyDown={(e) =>
-                          handleOtpKeyDown(
-                            index,
-                            e
-                          )
-                        }
-                        className="h-12 min-w-0 flex-1 rounded-xl border border-[#F37021] bg-white text-center text-lg font-bold text-black outline-none focus:ring-2 focus:ring-[#F37021] sm:h-14 sm:text-xl"
-                      />
-                    )
-                  )}
-                </div>
-
-                {otpError && (
-                  <p className="mt-3 text-center text-xs font-bold text-rose-600">
-                    {otpError}
-                  </p>
-                )}
-
-                <div className="mt-6 text-center">
-                  <p className="flex items-center justify-center gap-1 text-xs font-semibold text-gray-500">
-                    <Clock className="h-4 w-4 text-[#F37021]" />
-                    Resend code in:
-                    <strong className="font-mono text-black">
-                      {String(
-                        Math.floor(
-                          otpTimer / 60
-                        )
-                      ).padStart(2, '0')}
-                      :
-                      {String(
-                        otpTimer % 60
-                      ).padStart(2, '0')}
-                    </strong>
-                  </p>
-
-                  <button
-                    type="button"
-                    disabled={
-                      otpTimer > 0
-                    }
-                    onClick={
-                      handleResendOtp
-                    }
-                    className={`mt-2 text-sm font-bold ${
-                      otpTimer === 0
-                        ? 'text-[#F37021] hover:underline'
-                        : 'cursor-not-allowed text-gray-400'
-                    }`}
-                  >
-                    Resend OTP
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={
-                    handleVerifyOtp
-                  }
-                  className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F37021] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:bg-[#D95D12]"
-                >
-                  <CheckCircle2 className="h-5 w-5" />
-                  Verify OTP
-                </button>
-              </div>
-            )}
-
-            {/* =================================================
-                HOME
-                ================================================= */}
-            {screen === 'HOME' && (
-              <div className="space-y-5">
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-black text-black">
-                      Hi{' '}
-                      {customerName ||
-                        'Sai'}
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      Where would you like
-                      to shift goods?
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setScreen('PROFILE')
-                    }
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-sm font-bold text-[#F37021]"
-                  >
-                    {customerName
-                      ? customerName
-                          .charAt(0)
-                          .toUpperCase()
-                      : 'S'}
-                  </button>
-                </div>
-
-                {/* ROUTE */}
-                <div
-                  className="rounded-2xl border border-orange-200 p-4 shadow-sm sm:p-5"
-                  style={{
-                    backgroundColor:
-                      PEACH_BG,
-                  }}
-                >
-                  <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr_auto] lg:items-end">
-
-                    {/* FROM */}
-                    <div>
-                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
-                        From
-                      </label>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setLocationModalType(
-                            'FROM'
-                          )
-                        }
-                        className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-[#F37021] bg-white p-3 text-left shadow-sm transition hover:bg-orange-50"
-                      >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black">
-                          <div className="h-2 w-2 rounded-full bg-white" />
-                        </div>
-
-                        <span className="min-w-0 flex-1 truncate text-sm font-bold text-black">
-                          {fromLocation}
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* SWAP */}
-                    <button
-                      type="button"
-                      onClick={
-                        handleSwapLocations
-                      }
-                      className="mx-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#F37021] bg-white text-[#F37021] shadow-sm transition hover:scale-105"
-                    >
-                      <ArrowUpDown className="h-4 w-4" />
-                    </button>
-
-                    {/* TO */}
-                    <div>
-                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">
-                        To
-                      </label>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setLocationModalType(
-                            'TO'
-                          )
-                        }
-                        className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-[#F37021] bg-white p-3 text-left shadow-sm transition hover:bg-orange-50"
-                      >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F37021] text-white">
-                          <MapPin className="h-4 w-4" />
-                        </div>
-
-                        <span className="min-w-0 flex-1 truncate text-sm font-bold text-black">
-                          {toLocation}
-                        </span>
-                      </button>
-                    </div>
-
-                    {/* CONFIRM */}
-                    <button
-                      type="button"
-                      onClick={
-                        handleLocationConfirm
-                      }
-                      className="min-h-14 rounded-xl bg-[#F37021] px-7 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition hover:bg-[#D95D12]"
-                    >
-                      Confirm
-                    </button>
-                  </div>
-                </div>
-
-                {/* PROMOS */}
-                <div className="grid gap-4 md:grid-cols-2">
-
-                  <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900 p-4 text-white shadow-sm">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F37021]">
-                        <Sparkles className="h-5 w-5" />
-                      </div>
-
-                      <div className="min-w-0">
-                        <p className="text-sm font-black text-amber-400">
-                          10% off on Trucks
-                        </p>
-
-                        <p className="mt-0.5 text-xs text-slate-300">
-                          Subscribe to
-                          Transmaa Gold
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        alert(
-                          'Transmaa Gold plan activated!'
-                        )
-                      }
-                      className="ml-3 shrink-0 rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-black text-black hover:bg-amber-300"
-                    >
-                      Join
-                    </button>
-                  </div>
-
-                  <div
-                    className="flex items-center justify-between overflow-hidden rounded-2xl border border-orange-200 p-4 shadow-sm"
-                    style={{
-                      backgroundColor:
-                        PEACH_BG,
-                    }}
-                  >
-                    <div>
-                      <span className="rounded-md bg-[#F37021] px-2 py-1 text-[9px] font-black uppercase tracking-wider text-white">
-                        SALE
-                      </span>
-
-                      <h3 className="mt-2 text-xl font-black text-black">
-                        UP TO 50% OFF
-                      </h3>
-
-                      <p className="text-xs text-slate-600">
-                        House Shifting &
-                        Truck Loads
-                      </p>
-                    </div>
-
-                    <div className="ml-4 text-4xl sm:text-5xl">
-                      🚚
-                    </div>
-                  </div>
-                </div>
-
-                {/* BOOKING HISTORY */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setScreen('HISTORY')
-                  }
-                  className="w-full rounded-xl border border-orange-100 bg-orange-50 py-3 text-sm font-bold text-[#F37021] hover:bg-orange-100"
-                >
-                  View My Past Bookings (
-                  {bookingHistory.length})
-                </button>
-
-                {/* PROFILE */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setScreen('PROFILE')
-                  }
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-700 hover:border-[#F37021] hover:text-[#F37021]"
-                >
-                  <UserCircle className="h-5 w-5" />
-                  View My Profile
-                </button>
-              </div>
-            )}
-
-            {/* =================================================
-                CHOOSE TRUCK
-                ================================================= */}
-            {screen === 'CHOOSE_TRUCK' && (
-              <div className="space-y-5">
-
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setScreen('HOME')
-                    }
-                    className="flex w-fit items-center gap-1 text-sm font-bold text-[#F37021] hover:underline"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Change Location
-                  </button>
-
-                  <span className="text-xs font-bold text-gray-500">
-                    {fromLocation.split(
-                      ','
-                    )[0]}
-                    {' → '}
-                    {toLocation.split(
-                      ','
-                    )[0]}
-                  </span>
-                </div>
-
-                {/* SCHEDULE */}
-                <div
-                  className="rounded-2xl border border-orange-200 p-4"
-                  style={{
-                    backgroundColor:
-                      PEACH_BG,
-                  }}
-                >
-                  <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-600">
-                    Select Shifting Schedule
-                  </p>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="flex items-center gap-2 rounded-xl border border-[#F37021] bg-white p-3">
-                      <Calendar className="h-5 w-5 shrink-0 text-[#F37021]" />
-
-                      <input
-                        type="date"
-                        value={
-                          bookingDate
-                        }
-                        onChange={(e) =>
-                          setBookingDate(
-                            e.target.value
-                          )
-                        }
-                        className="min-w-0 w-full bg-transparent text-sm font-bold text-black outline-none"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-2 rounded-xl border border-[#F37021] bg-white p-3">
-                      <Clock className="h-5 w-5 shrink-0 text-[#F37021]" />
-
-                      <select
-                        value={
-                          bookingTime
-                        }
-                        onChange={(e) =>
-                          setBookingTime(
-                            e.target.value
-                          )
-                        }
-                        className="min-w-0 w-full bg-transparent text-sm font-bold text-black outline-none"
-                      >
-                        <option>
-                          08:00 AM
-                        </option>
-                        <option>
-                          10:00 AM
-                        </option>
-                        <option>
-                          12:00 PM
-                        </option>
-                        <option>
-                          02:00 PM
-                        </option>
-                        <option>
-                          04:00 PM
-                        </option>
-                        <option>
-                          06:00 PM
-                        </option>
-                        <option>
-                          08:00 PM
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* GOODS */}
-                <div>
-                  <label className="mb-2 flex items-center gap-2 text-sm font-bold text-black">
-                    <Package className="h-4 w-4 text-[#F37021]" />
-                    Goods Type
-                  </label>
-
-                  <div className="relative">
-                    <select
-                      value={
-                        selectedGoodsType
-                      }
-                      onChange={(e) =>
-                        setSelectedGoodsType(
-                          e.target.value
-                        )
-                      }
-                      className="w-full appearance-none rounded-xl border border-[#F37021] bg-white px-4 py-3.5 pr-10 text-sm font-bold text-black outline-none focus:ring-2 focus:ring-[#F37021]"
-                    >
-                      {GOODS_TYPES.map(
-                        (type) => (
-                          <option
-                            key={type}
-                            value={type}
-                          >
-                            {type}
-                          </option>
-                        )
-                      )}
-                    </select>
-
-                    <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
-                  </div>
-                </div>
-
-                {/* WEIGHT + EXPECTED COST */}
-                <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
-                  <h3 className="text-base font-black text-black">
-                    Load Details
-                  </h3>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    Enter your load weight and
-                    expected transportation cost.
-                  </p>
-
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-
-                    {/* WEIGHT */}
-                    <div>
-                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-600">
-                        Load Weight
-                      </label>
-
-                      <div className="flex overflow-hidden rounded-xl border border-[#F37021] bg-white">
-                        <input
-                          type="number"
-                          min="0.1"
-                          step="0.1"
-                          value={
-                            loadWeight
-                          }
-                          onChange={(e) =>
-                            setLoadWeight(
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g. 5"
-                          className="min-w-0 flex-1 bg-white px-4 py-3.5 text-sm font-bold text-black outline-none"
-                        />
-
-                        <div className="flex items-center bg-orange-50 px-4 text-sm font-black text-[#F37021]">
-                          Tons
+                  {/* ROUTE BOX CONTAINER */}
+                  <div className="relative rounded-2xl border-2 border-[#F37021] bg-white px-8 py-6 shadow-xs">
+                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-6">
+                      
+                      {/* FROM SECTION */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-medium text-gray-500 pl-1">From,</label>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-black">
+                            <div className="h-2.5 w-2.5 rounded-full bg-black" />
+                          </div>
+                          <input
+                            type="text"
+                            value={fromLocation}
+                            onChange={(e) => setFromLocation(e.target.value)}
+                            placeholder="Load from..."
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-normal text-gray-800 placeholder-gray-400 focus:border-[#F37021]"
+                          />
                         </div>
                       </div>
-                    </div>
 
-                    {/* TRANSPORTATION COST */}
-                    <div>
-                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-600">
-                        Expected Transportation Cost
-                      </label>
-
-                      <div className="flex overflow-hidden rounded-xl border border-[#F37021] bg-white">
-                        <div className="flex items-center bg-orange-50 px-4 text-sm font-black text-[#F37021]">
-                          ₹
-                        </div>
-
-                        <input
-                          type="number"
-                          min="0"
-                          step="50"
-                          value={
-                            expectedTransportationCost
-                          }
-                          onChange={(e) =>
-                            setExpectedTransportationCost(
-                              e.target.value
-                            )
-                          }
-                          placeholder="e.g. 800"
-                          className="min-w-0 flex-1 bg-white px-3 py-3.5 text-sm font-bold text-black outline-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 rounded-xl border border-orange-100 bg-white p-3 text-xs text-slate-600">
-                    💡 The vehicle fare and
-                    transportation cost will be
-                    shown separately before you
-                    confirm the booking.
-                  </div>
-                </div>
-
-                {/* TITLE */}
-                <div>
-                  <h3 className="text-lg font-black text-black">
-                    Choose Truck Type
-                  </h3>
-
-                  <p className="text-sm text-gray-500">
-                    Select payload capacity suited
-                    for your goods
-                  </p>
-                </div>
-
-                {/* TRUCK GRID */}
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {TRUCK_TYPES.map(
-                    (truck) => {
-                      const isSelected =
-                        selectedTruck.id ===
-                        truck.id;
-
-                      return (
+                      {/* CENTER DIVIDER & SWAP */}
+                      <div className="flex flex-col items-center justify-center gap-2 pt-4 px-2">
+                        <span className="text-gray-400 text-xs">⋮</span>
                         <button
-                          key={truck.id}
                           type="button"
-                          onClick={() =>
-                            setSelectedTruck(
-                              truck
-                            )
-                          }
-                          className={`relative w-full rounded-2xl border p-4 text-left transition ${
-                            isSelected
-                              ? 'border-[#F37021] bg-orange-50 shadow-md ring-2 ring-[#F37021]/20'
-                              : 'border-orange-200 bg-white shadow-sm hover:border-[#F37021]'
-                          }`}
+                          onClick={handleSwapLocations}
+                          className="text-gray-400 hover:text-[#F37021] transition"
                         >
-                          <div className="flex items-start justify-between gap-3">
+                          <ArrowUpDown className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
 
-                            <div className="flex min-w-0 items-start gap-3">
-                              <div
-                                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                                  isSelected
-                                    ? 'bg-[#F37021] text-white'
-                                    : 'bg-orange-100 text-[#F37021]'
-                                }`}
-                              >
-                                <Truck className="h-5 w-5" />
-                              </div>
+                      {/* TO SECTION */}
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-medium text-gray-500 pl-1">To,</label>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F37021] text-white">
+                            <MapPin className="h-3.5 w-3.5 fill-current" />
+                          </div>
+                          <input
+                            type="text"
+                            value={toLocation}
+                            onChange={(e) => setToLocation(e.target.value)}
+                            placeholder="Unload to..."
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-normal text-gray-800 placeholder-gray-400 focus:border-[#F37021]"
+                          />
+                        </div>
+                      </div>
 
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <h4 className="text-sm font-black text-black">
-                                    {truck.name}
-                                  </h4>
+                    </div>
 
-                                  {truck.badge && (
-                                    <span className="rounded bg-[#F37021] px-1.5 py-0.5 text-[9px] font-bold text-white">
-                                      {truck.badge}
-                                    </span>
-                                  )}
-                                </div>
+                    {/* CONFIRM BUTTON */}
+                    <div className="mt-5 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setScreen('CHOOSE_TRUCK')}
+                        className="w-48 rounded-lg bg-[#9AA0A6] py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#F37021]"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
 
-                                <p className="mt-1 text-xs font-bold text-[#F37021]">
-                                  Payload:{' '}
-                                  {
-                                    truck.capacity
-                                  }
-                                </p>
+                  {/* BANNER 1: PORTER GOLD */}
+                  <div className="flex items-center justify-between rounded-xl bg-[#333333] px-6 py-4 text-white shadow-xs">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F37021] text-lg font-black">
+                        %
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">10% off on 2 Wheeler & Trucks</p>
+                        <p className="text-[11px] text-gray-300">Subscribe to Porter Gold Now!</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-gray-300" />
+                  </div>
 
-                                <p className="mt-1 text-xs text-gray-500">
-                                  {
-                                    truck.dimensions
-                                  }
-                                </p>
+                  {/* BANNER 2: SPECIAL OFFER SALE */}
+                  <div className="relative flex h-32 items-center justify-between overflow-hidden rounded-xl bg-[#71415F] px-8 text-white shadow-xs">
+                    <div className="z-10 space-y-0.5">
+                      <p className="text-[11px] font-medium text-pink-200">Special offer</p>
+                      <h3 className="text-2xl font-black tracking-wide">SALE</h3>
+                      <p className="text-[10px] font-bold tracking-wider text-amber-200">UP TO 50% OFF</p>
+                      <p className="text-[9px] text-gray-200 uppercase tracking-widest pt-0.5">ONLY TODAY</p>
+                      <button 
+                        type="button"
+                        className="mt-1 rounded-md bg-[#333333] px-3 py-1 text-[10px] font-bold text-white hover:bg-black transition"
+                      >
+                        BUY NOW
+                      </button>
+                    </div>
+                    <div className="text-5xl opacity-80">🛒</div>
+                  </div>
 
-                                <p className="mt-1 text-xs text-gray-500">
-                                  ETA:{' '}
-                                  {truck.eta}
-                                </p>
-                              </div>
+                  {/* BANNER 3: VECTOR TRUCK & LOGISTICS ILLUSTRATION */}
+                  <div className="relative flex h-36 items-center justify-center rounded-xl border border-gray-200 bg-[#E8F4F8] shadow-xs overflow-hidden px-8">
+                    <div className="relative flex items-center justify-center w-full max-w-lg">
+                      {/* LIGHT BLUE BACKGROUND CLOUD SHAPE */}
+                      <div className="absolute h-24 w-72 rounded-full bg-[#D4EAF3] -z-0" />
+                      
+                      {/* TRUCK GRAPHIC */}
+                      <div className="relative z-10 flex items-end gap-3">
+                        <div className="flex flex-col items-center">
+                          {/* TRUCK BODY */}
+                          <div className="flex items-end">
+                            {/* CABIN */}
+                            <div className="h-12 w-10 rounded-l-lg bg-amber-400 border-2 border-slate-800 flex items-center justify-center relative">
+                              <div className="h-4 w-4 bg-sky-200 rounded-xs border border-slate-800 absolute top-2 left-1" />
                             </div>
-
-                            <div className="shrink-0 text-right">
-                              <p className="text-base font-black text-black">
-                                ₹
-                                {
-                                  truck.basePrice
-                                }
-                              </p>
-
-                              <p className="text-[10px] text-gray-400">
-                                Vehicle fare
-                              </p>
-
-                              {isSelected && (
-                                <CheckCircle2 className="ml-auto mt-2 h-5 w-5 text-[#F37021]" />
-                              )}
+                            {/* CONTAINER */}
+                            <div className="h-16 w-36 bg-[#C0392B] rounded-r-lg border-2 border-slate-800 flex items-center justify-center shadow-inner">
+                              <span className="text-[10px] font-black text-white tracking-widest uppercase">
+                                DELIVERY
+                              </span>
                             </div>
                           </div>
+                          {/* WHEELS */}
+                          <div className="flex gap-16 -mt-2">
+                            <div className="h-5 w-5 rounded-full bg-slate-900 border-2 border-gray-300" />
+                            <div className="h-5 w-5 rounded-full bg-slate-900 border-2 border-gray-300" />
+                          </div>
+                        </div>
 
-                          <p className="mt-3 border-t border-orange-100 pt-3 text-xs leading-relaxed text-gray-500">
-                            {
-                              truck.suitableFor
-                            }
-                          </p>
-                        </button>
-                      );
-                    }
-                  )}
-                </div>
-
-                {/* BOOK BUTTON */}
-                <div className="sticky bottom-20 z-20 pt-2">
-                  <button
-                    type="button"
-                    onClick={
-                      handleBookPickup
-                    }
-                    className="mx-auto flex w-full max-w-2xl items-center justify-center gap-2 rounded-xl bg-[#F37021] px-6 py-4 text-sm font-bold text-white shadow-xl shadow-orange-500/25 transition hover:bg-[#D95D12]"
-                  >
-                    Continue to Booking
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* =================================================
-                CONFIRM
-                ================================================= */}
-            {screen === 'CONFIRM' && (
-              <div className="mx-auto max-w-3xl space-y-5">
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setScreen(
-                      'CHOOSE_TRUCK'
-                    )
-                  }
-                  className="flex items-center gap-1 text-sm font-bold text-[#F37021] hover:underline"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Trucks
-                </button>
-
-                <div className="text-center">
-                  <h2 className="text-2xl font-black text-black">
-                    Confirm Booking Details
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Please review your shifting
-                    consignment details
-                  </p>
-                </div>
-
-                <div className="space-y-5 rounded-2xl border border-[#F37021] bg-white p-4 shadow-md sm:p-6">
-
-                  {/* TRUCK */}
-                  <div
-                    className="flex items-center gap-3 rounded-xl border border-orange-200 p-4"
-                    style={{
-                      backgroundColor:
-                        PEACH_BG,
-                    }}
-                  >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F37021] text-white">
-                      <Truck className="h-6 w-6" />
-                    </div>
-
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-black text-black sm:text-base">
-                        {selectedTruck.name}
-                      </h3>
-
-                      <p className="mt-1 text-xs font-bold text-[#F37021]">
-                        Capacity:{' '}
-                        {
-                          selectedTruck.capacity
-                        }
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* ROUTE */}
-                  <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">
-                        A
-                      </div>
-
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase text-gray-400">
-                          From
-                        </p>
-
-                        <p className="mt-1 break-words text-sm font-bold text-black">
-                          {fromLocation}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="ml-3.5 h-5 border-l-2 border-dashed border-orange-300" />
-
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F37021] text-xs font-bold text-white">
-                        B
-                      </div>
-
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase text-[#F37021]">
-                          To
-                        </p>
-
-                        <p className="mt-1 break-words text-sm font-bold text-black">
-                          {toLocation}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* DETAILS */}
-                  <div className="grid gap-3 sm:grid-cols-2">
-
-                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-3">
-                      <p className="text-[10px] font-bold uppercase text-gray-500">
-                        Date & Time
-                      </p>
-
-                      <p className="mt-1 text-sm font-bold text-black">
-                        {bookingDate}
-                        <br />
-                        {bookingTime}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-3">
-                      <p className="text-[10px] font-bold uppercase text-gray-500">
-                        Goods Category
-                      </p>
-
-                      <p className="mt-1 break-words text-sm font-bold text-black">
-                        {selectedGoodsType}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-3">
-                      <p className="text-[10px] font-bold uppercase text-gray-500">
-                        Load Weight
-                      </p>
-
-                      <p className="mt-1 text-sm font-bold text-black">
-                        {loadWeight} Tons
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border border-orange-200 bg-orange-50 p-3">
-                      <p className="text-[10px] font-bold uppercase text-gray-500">
-                        Expected Transportation
-                      </p>
-
-                      <p className="mt-1 text-sm font-bold text-[#F37021]">
-                        ₹
-                        {
-                          expectedTransportationCost
-                        }
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* FARE BREAKDOWN */}
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-
-                    <h3 className="mb-3 text-sm font-black text-black">
-                      Fare Breakdown
-                    </h3>
-
-                    <div className="space-y-3 text-sm">
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-500">
-                          Vehicle fare
-                        </span>
-
-                        <span className="font-bold text-black">
-                          ₹
-                          {
-                            selectedTruck.basePrice
-                          }
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-500">
-                          Expected transportation
-                        </span>
-
-                        <span className="font-bold text-black">
-                          ₹
-                          {
-                            Number(
-                              expectedTransportationCost
-                            )
-                          }
-                        </span>
-                      </div>
-
-                      <div className="border-t border-slate-200 pt-3">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-gray-600">
-                            Estimated Total
-                          </span>
-
-                          <span className="text-2xl font-black text-[#F37021]">
-                            ₹
-                            {selectedTruck.basePrice +
-                              Number(
-                                expectedTransportationCost
-                              )}
-                          </span>
+                        {/* COURIER WORKERS / BOXES ART */}
+                        <div className="flex items-end gap-1.5 z-10">
+                          <div className="h-6 w-6 rounded-md bg-amber-600 border border-slate-800" />
+                          <div className="h-8 w-8 rounded-md bg-amber-700 border border-slate-800" />
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                    <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />
-
-                    <p className="text-xs font-bold text-emerald-700">
-                      Transmaa Shield Covered
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={
-                    handleConfirmPickup
-                  }
-                  className="mx-auto flex w-full max-w-xl items-center justify-center gap-2 rounded-xl bg-[#F37021] px-6 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:bg-[#D95D12]"
-                >
-                  <CheckCircle2 className="h-5 w-5" />
-                  Confirm Pickup
-                </button>
-              </div>
-            )}
-
-            {/* =================================================
-                WAITING
-                ================================================= */}
-            {screen === 'WAITING' && (
-              <div className="flex min-h-[calc(100vh-200px)] flex-col items-center justify-center px-4 text-center">
-
-                <div className="relative mb-8 flex h-40 w-40 items-center justify-center">
-                  <div className="absolute inset-0 animate-pulse rounded-full bg-orange-400/20" />
-
-                  <div className="absolute inset-5 animate-pulse rounded-full bg-orange-500/20" />
-
-                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-[#F37021] text-white shadow-xl shadow-orange-500/40">
-                    <Truck className="h-12 w-12" />
-                  </div>
-                </div>
-
-                <div className="max-w-md">
-                  <h2 className="text-xl font-black text-black sm:text-2xl">
-                    Waiting for Transmaa
-                    confirmation...
-                  </h2>
-
-                  <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                    Your booking request is being
-                    sent to Transmaa staff for
-                    verification.
-                  </p>
-                </div>
-
-                <div className="mt-6 flex items-center gap-2">
-                  <div className="h-3 w-3 animate-bounce rounded-full bg-[#F37021]" />
-
-                  <div
-                    className="h-3 w-3 animate-bounce rounded-full bg-[#F37021]"
-                    style={{
-                      animationDelay:
-                        '0.2s',
-                    }}
-                  />
-
-                  <div
-                    className="h-3 w-3 animate-bounce rounded-full bg-[#F37021]"
-                    style={{
-                      animationDelay:
-                        '0.4s',
-                    }}
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={
-                    handleCancelWaiting
-                  }
-                  className="mt-8 rounded-xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-bold text-rose-600 hover:bg-rose-100"
-                >
-                  Cancel Booking Request
-                </button>
-              </div>
-            )}
-
-            {/* =================================================
-                TRACKING
-                ================================================= */}
-            {screen === 'TRACKING' &&
-              currentPendingOrder && (
-                <div className="mx-auto max-w-3xl space-y-5">
-
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setScreen('HISTORY')
-                      }
-                      className="flex items-center gap-1 text-sm font-bold text-[#F37021] hover:underline"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      My Bookings
-                    </button>
-
-                    <span
-                      className={`rounded-md border px-3 py-1.5 text-[10px] font-black uppercase ${getStatusClass(
-                        currentPendingOrder.status
-                      )}`}
-                    >
-                      {
-                        currentPendingOrder.status
-                      }
-                    </span>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-100 text-[#F37021]">
-                      <Navigation className="h-8 w-8" />
-                    </div>
-
-                    <h2 className="mt-4 text-2xl font-black text-black">
-                      Live Booking Tracking
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      Booking #{currentPendingOrder.id}
-                    </p>
-                  </div>
-
-                  {/* ROUTE */}
-                  <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-500">
-                          Pickup
-                        </p>
-
-                        <p className="mt-1 text-sm font-bold text-black">
-                          {
-                            currentPendingOrder.from
-                          }
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-500">
-                          Destination
-                        </p>
-
-                        <p className="mt-1 text-sm font-bold text-black">
-                          {
-                            currentPendingOrder.to
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* TRACKING TIMELINE */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-
-                    <h3 className="mb-6 text-lg font-black text-black">
-                      Delivery Status
-                    </h3>
-
-                    <div className="space-y-0">
-                      {trackingSteps.map(
-                        (
-                          step,
-                          index
-                        ) => {
-                          const completed =
-                            index <
-                            getTrackingStage;
-
-                          const active =
-                            index ===
-                            getTrackingStage;
-
-                          const isLast =
-                            index ===
-                            trackingSteps.length -
-                              1;
-
-                          return (
-                            <div
-                              key={
-                                step.title
-                              }
-                              className="relative flex gap-4"
-                            >
-
-                              {!isLast && (
-                                <div
-                                  className={`absolute left-[15px] top-8 h-full w-0.5 ${
-                                    index <
-                                    getTrackingStage
-                                      ? 'bg-[#F37021]'
-                                      : 'bg-slate-200'
-                                  }`}
-                                />
-                              )}
-
-                              <div
-                                className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
-                                  completed
-                                    ? 'border-[#F37021] bg-[#F37021] text-white'
-                                    : active
-                                      ? 'border-[#F37021] bg-orange-50 text-[#F37021]'
-                                      : 'border-slate-300 bg-white text-slate-300'
-                                }`}
-                              >
-                                {completed ? (
-                                  <CheckCircle2 className="h-5 w-5" />
-                                ) : (
-                                  <span className="text-xs font-black">
-                                    {index +
-                                      1}
-                                  </span>
-                                )}
-                              </div>
-
-                              <div
-                                className={`min-w-0 pb-8 ${
-                                  isLast
-                                    ? 'pb-0'
-                                    : ''
-                                }`}
-                              >
-                                <h4
-                                  className={`text-sm font-black ${
-                                    completed ||
-                                    active
-                                      ? 'text-black'
-                                      : 'text-slate-400'
-                                  }`}
-                                >
-                                  {
-                                    step.title
-                                  }
-
-                                  {active &&
-                                    !completed && (
-                                      <span className="ml-2 rounded-full bg-orange-100 px-2 py-1 text-[9px] font-black uppercase text-[#F37021]">
-                                        Pending
-                                      </span>
-                                    )}
-                                </h4>
-
-                                <p
-                                  className={`mt-1 text-xs leading-relaxed ${
-                                    completed ||
-                                    active
-                                      ? 'text-gray-500'
-                                      : 'text-slate-300'
-                                  }`}
-                                >
-                                  {
-                                    step.description
-                                  }
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        }
-                      )}
-                    </div>
-                  </div>
-
-                  {/* IMPORTANT NOTE */}
-                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                    <p className="text-xs font-bold leading-relaxed text-blue-700">
-                      ℹ️ Tracking stages are updated
-                      by Transmaa staff. Only the
-                      stages that have been verified
-                      will be marked with a tick.
-                    </p>
-                  </div>
-
-                  {/* ORDER DETAILS */}
-                  <div className="rounded-2xl border border-orange-200 bg-white p-5">
-                    <h3 className="text-base font-black text-black">
-                      Booking Details
-                    </h3>
-
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-
-                      <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-400">
-                          Vehicle
-                        </p>
-
-                        <p className="mt-1 text-sm font-bold text-black">
-                          {
-                            currentPendingOrder
-                              .truck?.name
-                          }
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-400">
-                          Load Weight
-                        </p>
-
-                        <p className="mt-1 text-sm font-bold text-black">
-                          {
-                            currentPendingOrder.weight
-                          }{' '}
-                          Tons
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-400">
-                          Vehicle Fare
-                        </p>
-
-                        <p className="mt-1 text-sm font-bold text-black">
-                          ₹
-                          {
-                            currentPendingOrder.vehicleFare
-                          }
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[10px] font-bold uppercase text-gray-400">
-                          Transportation
-                        </p>
-
-                        <p className="mt-1 text-sm font-bold text-black">
-                          ₹
-                          {
-                            currentPendingOrder.expectedTransportationCost
-                          }
-                        </p>
-                      </div>
+                      {/* ROAD LINE BASE */}
+                      <div className="absolute bottom-0 w-full h-0.5 bg-slate-400" />
                     </div>
                   </div>
                 </div>
               )}
 
-            {/* =================================================
-                HISTORY
-                ================================================= */}
-            {screen === 'HISTORY' && (
-              <div className="space-y-5">
+              {screen === 'CHOOSE_TRUCK' && (
+                <div className="max-w-4xl space-y-6">
+                  <button
+                    type="button"
+                    onClick={() => setScreen('HOME')}
+                    className="flex items-center gap-2 text-xs font-bold text-[#F37021] hover:underline"
+                  >
+                    <ArrowLeft className="h-4 w-4" /> Back to Home
+                  </button>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="rounded-2xl border border-orange-200 bg-orange-50/40 p-5 space-y-3">
+                      <h3 className="text-xs font-black text-black uppercase tracking-wider flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-[#F37021]" /> Schedule Pickup
+                      </h3>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase text-gray-600 mb-1">
+                            Pickup Date
+                          </label>
+                          <input
+                            type="date"
+                            required
+                            value={bookingDate}
+                            onChange={(e) => setBookingDate(e.target.value)}
+                            className="w-full rounded-xl border border-[#F37021] bg-white p-2.5 text-xs font-bold text-black outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase text-gray-600 mb-1">
+                            Pickup Time
+                          </label>
+                          <input
+                            type="time"
+                            required
+                            value={bookingTime}
+                            onChange={(e) => setBookingTime(e.target.value)}
+                            className="w-full rounded-xl border border-[#F37021] bg-white p-2.5 text-xs font-bold text-black outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-orange-200 bg-orange-50/40 p-5 space-y-3">
+                      <h3 className="text-xs font-black text-black uppercase tracking-wider">
+                        Goods & Weight Details
+                      </h3>
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase text-gray-600 mb-1">
+                          Goods Category
+                        </label>
+                        <select
+                          value={selectedGoodsType}
+                          onChange={(e) => setSelectedGoodsType(e.target.value)}
+                          className="w-full rounded-xl border border-[#F37021] bg-white p-2.5 text-xs font-bold text-black outline-none"
+                        >
+                          {GOODS_TYPES.map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase text-gray-600 mb-1">
+                            Load Weight (Tons)
+                          </label>
+                          <input
+                            type="number"
+                            value={loadWeight}
+                            onChange={(e) => setLoadWeight(e.target.value)}
+                            placeholder="e.g. 5"
+                            className="w-full rounded-xl border border-[#F37021] bg-white p-2.5 text-xs font-bold text-black outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase text-gray-600 mb-1">
+                            Extra Cost (₹)
+                          </label>
+                          <input
+                            type="number"
+                            value={expectedTransportationCost}
+                            onChange={(e) => setExpectedTransportationCost(e.target.value)}
+                            placeholder="e.g. 800"
+                            className="w-full rounded-xl border border-[#F37021] bg-white p-2.5 text-xs font-bold text-black outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider">Select Commercial Vehicle</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {TRUCK_TYPES.map((truck) => (
+                        <button
+                          key={truck.id}
+                          type="button"
+                          onClick={() => setSelectedTruck(truck)}
+                          className={`group flex items-center justify-between rounded-2xl border p-4 text-left transition ${
+                            selectedTruck.id === truck.id
+                              ? 'border-[#F37021] bg-orange-50/50 ring-2 ring-[#F37021]/20'
+                              : 'border-gray-200 bg-white hover:border-[#F37021]/50'
+                          }`}
+                        >
+                          <div className="flex-1 pr-3 min-w-0">
+                            {truck.badge && (
+                              <span className="mb-1 inline-block rounded-md bg-orange-100 px-2 py-0.5 text-[9px] font-bold text-[#F37021]">
+                                {truck.badge}
+                              </span>
+                            )}
+                            <h4 className="font-bold text-black group-hover:text-[#F37021] transition text-xs truncate">
+                              {truck.name}
+                            </h4>
+                            <p className="text-[11px] text-gray-500 mt-0.5 truncate">Capacity: {truck.capacity}</p>
+                            <p className="mt-2 text-base font-black text-[#F37021]">
+                              ₹{truck.basePrice}
+                            </p>
+                          </div>
+
+                          <div className="h-16 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-gray-100">
+                            <img
+                              src={truck.image}
+                              alt={truck.name}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setScreen('CONFIRM')}
+                    className="w-full rounded-xl bg-[#F37021] py-3 text-sm font-bold text-white shadow-md hover:bg-[#D95D12] transition"
+                  >
+                    Continue to Confirmation
+                  </button>
+                </div>
+              )}
+
+              {screen === 'CONFIRM' && (
+                <div className="max-w-2xl space-y-6 mx-auto">
+                  <h2 className="text-2xl font-black text-center">Confirm Booking Details</h2>
+                  <div className="rounded-2xl border border-orange-200 bg-orange-50/30 p-6 space-y-3 text-xs font-bold">
+                    <p className="break-words"><span className="text-gray-500">From:</span> {fromLocation || 'Sircilla, Telangana'}</p>
+                    <p className="break-words"><span className="text-gray-500">To:</span> {toLocation || 'Hitech City, Hyderabad'}</p>
+                    <p><span className="text-gray-500">Pickup Date:</span> {bookingDate}</p>
+                    <p><span className="text-gray-500">Pickup Time:</span> {bookingTime}</p>
+                    <p><span className="text-gray-500">Truck:</span> {selectedTruck.name}</p>
+                    <p><span className="text-gray-500">Goods Category:</span> {selectedGoodsType}</p>
+                    <p><span className="text-gray-500">Weight:</span> {loadWeight || '0'} Tons</p>
+                    <p className="text-lg font-black text-[#F37021] pt-3 border-t border-orange-200">Total Fare: ₹{selectedTruck.basePrice + (Number(expectedTransportationCost) || 0)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleConfirmPickup}
+                    className="w-full rounded-xl bg-[#F37021] py-3 text-sm font-bold text-white shadow-md hover:bg-[#D95D12] transition"
+                  >
+                    Confirm Pickup & Save
+                  </button>
+                </div>
+              )}
+
+              {screen === 'WAITING' && (
+                <div className="max-w-xl space-y-6 text-center py-6 mx-auto">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-[#F37021]">
+                    <CheckCircle2 className="h-10 w-10" />
+                  </div>
+
                   <div>
-                    <h2 className="text-2xl font-black text-black">
-                      Booking History
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      Track live trips and past
-                      consignments
+                    <h2 className="text-2xl font-black text-black">Booking Confirmed!</h2>
+                    <p className="text-xs font-bold text-gray-500 mt-1">
+                      Booking ID: #{currentPendingOrder?.id}
                     </p>
                   </div>
 
+                  <div className="rounded-2xl border border-orange-200 bg-white p-6 text-left shadow-xs space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Route Details</span>
+                      <span className="text-xs font-bold text-[#F37021] truncate">{currentPendingOrder?.truck_name}</span>
+                    </div>
+                    <p className="text-base font-bold text-black break-words">
+                      {currentPendingOrder?.from_location} → {currentPendingOrder?.to_location}
+                    </p>
+
+                    {renderStatusTracker(currentPendingOrder?.status || 'Order Waiting')}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setScreen('HISTORY')}
+                      className="flex-1 rounded-xl border border-orange-200 bg-orange-50 py-3 text-xs font-bold text-[#F37021]"
+                    >
+                      View All Bookings
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setScreen('HOME')}
+                      className="flex-1 rounded-xl bg-[#F37021] py-3 text-xs font-bold text-white shadow-xs"
+                    >
+                      Back to Home
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {screen === 'HISTORY' && (
+                <div className="max-w-4xl space-y-6">
                   <button
                     type="button"
-                    onClick={() =>
-                      setScreen('HOME')
-                    }
-                    className="w-full rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-bold text-[#F37021] hover:bg-orange-100 sm:w-auto"
+                    onClick={() => setScreen('HOME')}
+                    className="flex items-center gap-2 text-xs font-bold text-[#F37021] hover:underline"
                   >
-                    + New Load
+                    <ArrowLeft className="h-4 w-4" /> Back to Dashboard
                   </button>
-                </div>
 
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {bookingHistory.map(
-                    (item) => (
-                      <div
-                        key={item.id}
-                        className="rounded-2xl border border-orange-200 bg-white p-4 shadow-sm transition hover:border-[#F37021] hover:shadow-md"
-                      >
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-black text-black">Booking History</h2>
+                    <span className="text-xs font-bold text-gray-500">
+                      Total: {bookingHistory.length}
+                    </span>
+                  </div>
 
-                        <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                          <span className="text-xs font-black text-black">
-                            #{item.id}
-                          </span>
-
-                          <span
-                            className={`rounded-md border px-2 py-1 text-[9px] font-black uppercase ${getStatusClass(
-                              item.status
-                            )}`}
-                          >
-                            {
-                              item.status
-                            }
-                          </span>
-                        </div>
-
-                        {/* ROUTE */}
-                        <div className="mt-4 space-y-3">
-                          <div className="flex items-start gap-3">
-                            <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-black" />
-
-                            <p className="text-sm font-bold text-black">
-                              {item.from}
-                            </p>
-                          </div>
-
-                          <div className="ml-1 h-3 border-l border-dashed border-orange-300" />
-
-                          <div className="flex items-start gap-3">
-                            <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[#F37021]" />
-
-                            <p className="text-sm font-bold text-black">
-                              {item.to}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* DETAILS */}
-                        <div className="mt-4 border-t border-slate-100 pt-3">
-                          <div className="grid grid-cols-2 gap-3">
-
-                            <div>
-                              <p className="text-xs font-semibold text-gray-600">
-                                {
-                                  item.truck
-                                    ?.name ||
-                                  'LCV'
-                                }
-                              </p>
-
-                              <p className="mt-1 text-[10px] text-gray-400">
-                                {
-                                  item.date
-                                }{' '}
-                                •{' '}
-                                {
-                                  item.time
-                                }
-                              </p>
-                            </div>
-
-                            <div className="text-right">
-                              <p className="text-base font-black text-black">
-                                ₹
-                                {
-                                  item.fare
-                                }
-                              </p>
-
-                              <p className="truncate text-[10px] text-gray-400">
-                                {
-                                  item.goodsType
-                                }
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="rounded-lg bg-orange-50 p-2">
-                              <p className="text-[9px] font-bold uppercase text-gray-400">
-                                Weight
-                              </p>
-
-                              <p className="mt-1 text-xs font-black text-black">
-                                {
-                                  item.weight
-                                }{' '}
-                                Tons
-                              </p>
-                            </div>
-
-                            <div className="rounded-lg bg-orange-50 p-2">
-                              <p className="text-[9px] font-bold uppercase text-gray-400">
-                                Transport
-                              </p>
-
-                              <p className="mt-1 text-xs font-black text-black">
-                                ₹
-                                {
-                                  item.expectedTransportationCost
-                                }
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* TRACK BUTTON */}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            openTracking(
-                              item
-                            )
-                          }
-                          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F37021] py-2.5 text-xs font-bold text-white hover:bg-[#D95D12]"
+                  {bookingHistory.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-orange-200 p-10 text-center text-gray-500 text-xs font-bold">
+                      No past bookings found.
+                    </div>
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {bookingHistory.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => setSelectedBookingDetail(item)}
+                          className="group cursor-pointer rounded-2xl border border-gray-200 bg-white p-5 shadow-xs space-y-3 hover:border-[#F37021] transition"
                         >
-                          <Navigation className="h-4 w-4" />
-                          View Tracking
-                        </button>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
+                          <div className="flex items-center justify-between">
+                            <span className="rounded-md bg-orange-100 px-2.5 py-0.5 text-[10px] font-bold text-[#F37021]">
+                              #{item.id}
+                            </span>
+                            <span className="text-sm font-black text-[#F37021]">
+                              ₹{item.fare}
+                            </span>
+                          </div>
 
-            {/* =================================================
-                PROFILE
-                ================================================= */}
-            {screen === 'PROFILE' && (
-              <div className="mx-auto max-w-2xl space-y-5">
+                          <p className="text-xs sm:text-sm font-bold text-black group-hover:text-[#F37021] transition break-words">
+                            {item.from_location} → {item.to_location}
+                          </p>
+                          <p className="text-[11px] text-gray-500 truncate">
+                            Vehicle: <span className="font-semibold text-gray-700">{item.truck_name}</span>
+                          </p>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setScreen('HOME')
-                  }
-                  className="flex items-center gap-1 text-sm font-bold text-[#F37021] hover:underline"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Home
-                </button>
+                          {renderStatusTracker(item.status || 'Order Waiting')}
 
-                <div className="text-center">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-orange-100 text-3xl font-black text-[#F37021]">
-                    {customerName
-                      ? customerName
-                          .charAt(0)
-                          .toUpperCase()
-                      : 'S'}
-                  </div>
-
-                  <h2 className="mt-4 text-2xl font-black text-black">
-                    My Profile
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Manage your Transmaa account
-                  </p>
-                </div>
-
-                {profileMessage && (
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-center text-sm font-bold text-emerald-700">
-                    {profileMessage}
-                  </div>
-                )}
-
-                <div className="rounded-2xl border border-orange-200 bg-white p-5 shadow-sm sm:p-6">
-
-                  {/* PROFILE HEADER */}
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <div className="flex items-center gap-3">
-                      <UserCircle className="h-7 w-7 text-[#F37021]" />
-
-                      <h3 className="text-lg font-black text-black">
-                        Personal Information
-                      </h3>
-                    </div>
-
-                    {!profileEditMode && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setProfileEditMode(
-                            true
-                          )
-                        }
-                        className="flex items-center gap-1 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-[#F37021] hover:bg-orange-100"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Edit Profile
-                      </button>
-                    )}
-                  </div>
-
-                  {/* NAME */}
-                  <div className="mt-5">
-                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">
-                      Name
-                    </label>
-
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
-
-                      <input
-                        type="text"
-                        disabled={
-                          !profileEditMode
-                        }
-                        value={
-                          customerName
-                        }
-                        onChange={(e) =>
-                          setCustomerName(
-                            e.target.value
-                          )
-                        }
-                        className={`w-full rounded-xl border border-orange-200 py-3.5 pl-12 pr-4 text-sm font-bold text-black outline-none ${
-                          profileEditMode
-                            ? 'bg-white focus:ring-2 focus:ring-[#F37021]'
-                            : 'bg-slate-50'
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  {/* PHONE */}
-                  <div className="mt-4">
-                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">
-                      Phone
-                    </label>
-
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
-
-                      <input
-                        type="tel"
-                        maxLength={10}
-                        disabled={
-                          !profileEditMode
-                        }
-                        value={
-                          customerPhone
-                        }
-                        onChange={(e) =>
-                          setCustomerPhone(
-                            e.target.value.replace(
-                              /\D/g,
-                              ''
-                            )
-                          )
-                        }
-                        className={`w-full rounded-xl border border-orange-200 py-3.5 pl-12 pr-4 text-sm font-bold tracking-wider text-black outline-none ${
-                          profileEditMode
-                            ? 'bg-white focus:ring-2 focus:ring-[#F37021]'
-                            : 'bg-slate-50'
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  {/* EMAIL */}
-                  <div className="mt-4">
-                    <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">
-                      Email
-                    </label>
-
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#F37021]" />
-
-                      <input
-                        type="email"
-                        disabled={
-                          !profileEditMode
-                        }
-                        value={
-                          customerEmail
-                        }
-                        onChange={(e) =>
-                          setCustomerEmail(
-                            e.target.value
-                          )
-                        }
-                        className={`w-full rounded-xl border border-orange-200 py-3.5 pl-12 pr-4 text-sm font-bold text-black outline-none ${
-                          profileEditMode
-                            ? 'bg-white focus:ring-2 focus:ring-[#F37021]'
-                            : 'bg-slate-50'
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  {/* EDIT ACTIONS */}
-                  {profileEditMode && (
-                    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-
-                      <button
-                        type="button"
-                        onClick={
-                          handleSaveProfile
-                        }
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#F37021] py-3.5 text-sm font-bold text-white hover:bg-[#D95D12]"
-                      >
-                        <CheckCircle2 className="h-5 w-5" />
-                        Save Changes
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProfileEditMode(
-                            false
-                          );
-                          setProfileMessage(
-                            ''
-                          );
-                        }}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-3.5 text-sm font-bold text-slate-600 hover:bg-slate-100"
-                      >
-                        <X className="h-5 w-5" />
-                        Cancel
-                      </button>
+                          <div className="pt-1 text-right">
+                            <span className="text-[10px] font-bold text-[#F37021] group-hover:underline">
+                              View Full Order →
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
-
-                {/* VIEW BOOKINGS */}
-                <div className="rounded-2xl border border-orange-200 bg-white p-5 shadow-sm">
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 text-[#F37021]">
-                      <History className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0">
-                      <h3 className="text-base font-black text-black">
-                        My Bookings
-                      </h3>
-
-                      <p className="text-xs text-gray-500">
-                        View and track all your
-                        bookings
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setScreen('HISTORY')
-                    }
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F37021] py-3.5 text-sm font-bold text-white hover:bg-[#D95D12]"
-                  >
-                    View My Bookings (
-                    {
-                      bookingHistory.length
-                    })
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {/* ACCOUNT INFO */}
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-bold leading-relaxed text-slate-500">
-                    Your profile information is
-                    used to manage your Transmaa
-                    bookings and communicate
-                    important booking updates.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </>
+          )}
         </main>
+      </div>
 
-        {/* ===================================================
-            MOBILE BOTTOM NAV
-            =================================================== */}
-        <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-orange-100 bg-white px-2 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] md:hidden">
-          <div className="mx-auto flex max-w-xl items-center justify-around">
+      {/* MODALS */}
+      {selectedBookingDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl border border-orange-200 bg-white p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="text-lg font-black text-black">Booking Details</h3>
+                <p className="text-[10px] font-bold text-[#F37021] mt-0.5">
+                  Order ID: #{selectedBookingDetail.id}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBookingDetail(null)}
+                className="rounded-full bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200 font-bold"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
 
-            <button
-              type="button"
-              onClick={() =>
-                handleBottomNavClick(
-                  'loads'
-                )
-              }
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center py-1 ${
-                navTab === 'loads'
-                  ? 'text-[#F37021]'
-                  : 'text-gray-500'
-              }`}
-            >
-              <Truck className="h-5 w-5" />
-
-              <span className="mt-1 text-[10px] font-bold">
-                Loads
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleBottomNavClick(
-                  'sell_buy'
-                )
-              }
-              className="flex min-w-0 flex-1 flex-col items-center justify-center py-1 text-gray-500"
-            >
-              <Tag className="h-5 w-5" />
-
-              <span className="mt-1 text-[10px] font-bold">
-                Sell & Buy
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleBottomNavClick(
-                  'finance'
-                )
-              }
-              className="flex min-w-0 flex-1 flex-col items-center justify-center py-1 text-gray-500"
-            >
-              <Landmark className="h-5 w-5" />
-
-              <span className="mt-1 text-[10px] font-bold">
-                Finance
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleBottomNavClick(
-                  'fuel'
-                )
-              }
-              className="flex min-w-0 flex-1 flex-col items-center justify-center py-1 text-gray-500"
-            >
-              <Fuel className="h-5 w-5" />
-
-              <span className="mt-1 text-[10px] font-bold">
-                Fuel
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                setScreen('PROFILE')
-              }
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center py-1 ${
-                screen === 'PROFILE'
-                  ? 'text-[#F37021]'
-                  : 'text-gray-500'
-              }`}
-            >
-              <UserCircle className="h-5 w-5" />
-
-              <span className="mt-1 text-[9px] font-semibold">
-                Profile
-              </span>
-            </button>
-          </div>
-        </nav>
-
-        {/* ===================================================
-            LOCATION MODAL
-            =================================================== */}
-        {locationModalType && (
-          <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
-
-            <div className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl">
-
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                <h3 className="text-base font-black text-black">
-                  Select{' '}
-                  {locationModalType ===
-                  'FROM'
-                    ? 'Pickup Location'
-                    : 'Dropoff Location'}
-                </h3>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLocationModalType(
-                      null
-                    );
-                    setSearchLocationQuery(
-                      ''
-                    );
-                  }}
-                  className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-black"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+            <div className="space-y-4 text-xs">
+              <div className="rounded-xl border border-orange-100 bg-orange-50/30 p-4 space-y-2">
+                <div>
+                  <p className="text-[9px] font-bold uppercase text-gray-400">Pickup Location</p>
+                  <p className="font-bold text-black text-xs mt-0.5 break-words">{selectedBookingDetail.from_location}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold uppercase text-gray-400">Dropoff Location</p>
+                  <p className="font-bold text-black text-xs mt-0.5 break-words">{selectedBookingDetail.to_location}</p>
+                </div>
               </div>
 
-              {/* SEARCH */}
-              <div className="relative my-4">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                  <p className="text-[9px] font-bold uppercase text-gray-400">Vehicle Type</p>
+                  <p className="font-bold text-black text-xs mt-0.5 truncate">{selectedBookingDetail.truck_name}</p>
+                </div>
+                <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                  <p className="text-[9px] font-bold uppercase text-gray-400">Goods Category</p>
+                  <p className="font-bold text-black text-xs mt-0.5 truncate">{selectedBookingDetail.goods_type || 'General'}</p>
+                </div>
+              </div>
 
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-3.5 space-y-2">
+                <div className="flex justify-between text-[11px] text-gray-600">
+                  <span>Load Weight:</span>
+                  <span className="font-bold text-black">{selectedBookingDetail.weight || 0} Tons</span>
+                </div>
+                <div className="flex justify-between text-[11px] text-gray-600">
+                  <span>Vehicle Base Fare:</span>
+                  <span className="font-bold text-black">₹{selectedBookingDetail.vehicle_fare || selectedBookingDetail.fare}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-gray-200 text-sm font-black text-[#F37021]">
+                  <span>Total Fare:</span>
+                  <span>₹{selectedBookingDetail.fare}</span>
+                </div>
+              </div>
+
+              {renderStatusTracker(selectedBookingDetail.status || 'Order Waiting')}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedBookingDetail(null)}
+              className="w-full rounded-xl bg-[#F37021] py-3 text-xs font-bold text-white shadow-xs hover:bg-[#D95D12]"
+            >
+              Close Details
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PROFILE MODAL */}
+      {activeProfileModal === 'EDIT_PROFILE' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-orange-200 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-black text-black">Edit Profile</h3>
+              <button
+                type="button"
+                onClick={() => setActiveProfileModal(null)}
+                className="rounded-full bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200 font-bold"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">Full Name</label>
                 <input
                   type="text"
-                  value={
-                    searchLocationQuery
-                  }
-                  onChange={(e) =>
-                    setSearchLocationQuery(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Search city, area, hub..."
-                  autoFocus
-                  className="w-full rounded-xl border border-[#F37021] bg-slate-50 py-3 pl-10 pr-4 text-sm font-semibold text-black outline-none focus:bg-white focus:ring-2 focus:ring-[#F37021]"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold bg-white focus:ring-2 focus:ring-[#F37021] outline-none"
                 />
               </div>
 
-              {/* LOCATIONS */}
-              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-                {PRESET_LOCATIONS.filter(
-                  (location) =>
-                    location
-                      .toLowerCase()
-                      .includes(
-                        searchLocationQuery.toLowerCase()
-                      )
-                ).map(
-                  (
-                    location,
-                    index
-                  ) => (
-                    <button
-                      type="button"
-                      key={index}
-                      onClick={() => {
-                        if (
-                          locationModalType ===
-                          'FROM'
-                        ) {
-                          setFromLocation(
-                            location
-                          );
-                        }
-
-                        if (
-                          locationModalType ===
-                          'TO'
-                        ) {
-                          setToLocation(
-                            location
-                          );
-                        }
-
-                        setLocationModalType(
-                          null
-                        );
-
-                        setSearchLocationQuery(
-                          ''
-                        );
-                      }}
-                      className="flex w-full items-center gap-3 rounded-xl border border-gray-100 p-3 text-left text-sm font-bold text-slate-800 transition hover:border-[#F37021] hover:bg-orange-50"
-                    >
-                      <MapPin className="h-4 w-4 shrink-0 text-[#F37021]" />
-
-                      <span>
-                        {location}
-                      </span>
-                    </button>
-                  )
-                )}
-
-                {PRESET_LOCATIONS.filter(
-                  (location) =>
-                    location
-                      .toLowerCase()
-                      .includes(
-                        searchLocationQuery.toLowerCase()
-                      )
-                ).length === 0 && (
-                  <div className="py-10 text-center text-sm text-gray-500">
-                    No locations found.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===================================================
-            HELP MODAL
-            =================================================== */}
-        {showHelpModal && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-
-            <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
-
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-[#F37021]">
-                <HelpCircle className="h-7 w-7" />
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">Phone Number</label>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
+                  className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold bg-white focus:ring-2 focus:ring-[#F37021] outline-none"
+                />
               </div>
 
-              <h3 className="mt-4 text-lg font-black text-black">
-                Transmaa Help & Support
-              </h3>
-
-              <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                24/7 dedicated customer
-                assistance for house shifting and
-                load logistics.
-              </p>
-
-              <div className="mt-5 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold text-slate-800">
-                📞 Toll-Free Helpline:
-                <br />
-                <span className="text-base text-[#F37021]">
-                  1800-123-9999
-                </span>
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">Email Address</label>
+                <input
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold bg-white focus:ring-2 focus:ring-[#F37021] outline-none"
+                />
               </div>
+
+              {profileMessage && (
+                <p className="text-[11px] font-bold text-emerald-600">{profileMessage}</p>
+              )}
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowHelpModal(
-                    false
-                  )
-                }
-                className="mt-5 w-full rounded-xl bg-[#F37021] py-3 font-bold text-white shadow-md shadow-orange-500/25 hover:bg-[#D95D12]"
+                onClick={handleSaveProfile}
+                className="w-full rounded-xl bg-[#F37021] py-3 text-xs font-bold text-white shadow-xs hover:bg-[#D95D12]"
               >
-                Close
+                Save Changes
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* CHANGE PASSWORD MODAL */}
+      {activeProfileModal === 'CHANGE_PASSWORD' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-orange-200 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-black text-black">Change Password</h3>
+              <button
+                type="button"
+                onClick={() => setActiveProfileModal(null)}
+                className="rounded-full bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200 font-bold"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">Current Password</label>
+                <input
+                  type="password"
+                  required
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-[#F37021]"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[10px] font-bold uppercase text-gray-500">New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 chars)"
+                  className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-[#F37021]"
+                />
+              </div>
+
+              {passwordError && (
+                <p className="text-[11px] font-bold text-rose-600">{passwordError}</p>
+              )}
+
+              {passwordSuccess && (
+                <p className="text-[11px] font-bold text-emerald-600">{passwordSuccess}</p>
+              )}
+
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-[#F37021] py-3 text-xs font-bold text-white hover:bg-[#D95D12]"
+              >
+                Update Password
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SAVED ADDRESSES MODAL */}
+      {activeProfileModal === 'SAVED_ADDRESSES' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-orange-200 bg-white p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-black text-black">Saved Addresses</h3>
+              <button
+                type="button"
+                onClick={() => setActiveProfileModal(null)}
+                className="rounded-full bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200 font-bold"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {savedAddresses.map((item) => (
+                <div key={item.id} className="flex items-center justify-between rounded-xl border border-gray-100 bg-orange-50/30 p-3">
+                  <div className="min-w-0 pr-2">
+                    <p className="text-xs font-bold text-black truncate">{item.title}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5 truncate">{item.address}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteAddress(item.id)}
+                    className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg shrink-0"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+
+              <div className="pt-3 border-t border-gray-100 space-y-3">
+                <p className="text-xs font-bold text-black">Add New Location</p>
+                <input
+                  type="text"
+                  placeholder="Title (e.g. Factory #1)"
+                  value={newAddressTitle}
+                  onChange={(e) => setNewAddressTitle(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Full Street Address"
+                  value={newAddressText}
+                  onChange={(e) => setNewAddressText(e.target.value)}
+                  className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-bold outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddAddress}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#F37021] py-2.5 text-xs font-bold text-white hover:bg-[#D95D12]"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Add Address
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HELP MODAL */}
+      {activeProfileModal === 'HELP_SUPPORT' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-orange-200 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-black text-black">Help & Support</h3>
+              <button
+                type="button"
+                onClick={() => setActiveProfileModal(null)}
+                className="rounded-full bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200 font-bold"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="rounded-xl border border-orange-100 bg-orange-50 p-3 space-y-1">
+                <p className="text-xs font-bold text-black">24/7 Transmaa Customer Hotline</p>
+                <p className="text-xs font-bold text-[#F37021]">+91 1800-123-4567</p>
+              </div>
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 space-y-1">
+                <p className="text-xs font-bold text-black">WhatsApp Live Assistance</p>
+                <p className="text-xs font-bold text-emerald-600">+91 9848012345</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TERMS MODAL */}
+      {activeProfileModal === 'TERMS_PRIVACY' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl border border-orange-200 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-black text-black">Terms & Privacy Policy</h3>
+              <button
+                type="button"
+                onClick={() => setActiveProfileModal(null)}
+                className="rounded-full bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200 font-bold"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-[11px] text-gray-600 max-h-60 overflow-y-auto">
+              <p className="font-bold text-black">Transmaa Freight & Logistics Terms:</p>
+              <p>1. All cargo transported must comply with national transport regulations.</p>
+              <p>2. Hazardous or illegal materials are strictly prohibited.</p>
+              <p>3. Transit safety is monitored via live status updates.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
-

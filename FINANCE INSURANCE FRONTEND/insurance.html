@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Transmaa - Insurance</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container insurance-theme">
+
+    <!-- HEADER -->
+    <header>
+        <h1>TRANSMAA</h1>
+
+        <button class="help-btn" onclick="showHelp()">?</button>
+    </header>
+
+
+    <!-- MAIN -->
+    <main>
+
+        <h2>Vehicle Insurance</h2>
+
+        <div class="form-section">
+
+            <!-- NAME -->
+            <label>Name</label>
+            <input
+                type="text"
+                id="name"
+                placeholder="Enter your name"
+            >
+
+
+            <!-- PHONE -->
+            <label>Phone Number</label>
+            <input
+                type="tel"
+                id="phone"
+                placeholder="Enter phone number"
+            >
+
+
+            <!-- VEHICLE -->
+            <label>Type of Vehicle</label>
+            <input
+                type="text"
+                id="vehicle"
+                placeholder="Enter vehicle type"
+            >
+
+
+            <!-- RC NUMBER -->
+            <label>RC Number</label>
+            <input
+                type="text"
+                id="rc"
+                placeholder="Enter RC number"
+            >
+
+
+            <!-- INSURANCE TYPE -->
+            <label>Insurance Type</label>
+            <input
+                type="text"
+                id="insuranceType"
+                placeholder="Enter insurance type"
+            >
+
+
+            <!-- SUBMIT -->
+            <button
+                class="insurance-submit"
+                onclick="submitInsurance()">
+                Submit
+            </button>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+function showHelp() {
+    alert("Please enter your vehicle insurance details.");
+}
+
+function submitInsurance() {
+
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const vehicle = document.getElementById("vehicle").value.trim();
+    const rc = document.getElementById("rc").value.trim();
+    const insuranceType =
+        document.getElementById("insuranceType").value.trim();
+
+    if (
+        name === "" ||
+        phone === "" ||
+        vehicle === "" ||
+        rc === "" ||
+        insuranceType === ""
+    ) {
+        alert("Please fill all the details.");
+        return;
+    }
+
+    window.location.href = "success.html";
+}
+
+</script>
+
+</body>
+</html>
