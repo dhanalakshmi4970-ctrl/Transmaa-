@@ -1,41 +1,31 @@
-const express =
-    require("express");
+const express = require("express");
+const router = express.Router();
 
-const router =
-    express.Router();
+const auth = require("../middleware/authMiddleware");
+const staff = require("../middleware/staffMiddleware");
+const admin = require("../middleware/adminMiddleware");
+const { loginLimiter } = require("../middleware/rateLimiter");
+const {
+  loginRules,
+  bootstrapAdminRules,
+  registerStaffRules,
+  changePasswordRules
+} = require("../validators/authValidators");
 
+const controller = require("../controllers/staffAuthController");
 
-const controller =
-    require(
-        "../controllers/staffAuthController"
-    );
+router.post("/bootstrap-admin", bootstrapAdminRules, controller.bootstrapAdmin);
 
+router.post("/login", loginLimiter, loginRules, controller.login);
 
-// ==========================================
-// CREATE STAFF ACCOUNT
-// ==========================================
+router.get("/me", auth, staff, controller.getMe);
 
-router.post(
+router.put("/change-password", auth, staff, changePasswordRules, controller.changePassword);
 
-    "/setup",
+router.post("/register", auth, staff, registerStaffRules, controller.registerStaff);
 
-    controller.setupStaff
+router.get("/staff", auth, admin, controller.listStaff);
 
-);
+router.put("/staff/:id/status", auth, admin, controller.setStaffStatus);
 
-
-// ==========================================
-// STAFF LOGIN
-// ==========================================
-
-router.post(
-
-    "/login",
-
-    controller.login
-
-);
-
-
-module.exports =
-    router;
+module.exports = router;

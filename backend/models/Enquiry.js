@@ -1,90 +1,30 @@
 const mongoose = require("mongoose");
 
-
 const enquirySchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    vehicleType: { type: String },
+    rcNumber: { type: String },
 
-    {
-
-        name: {
-
-            type: String,
-
-            required: true
-
-        },
-
-
-        phone: {
-
-            type: String,
-
-            required: true
-
-        },
-
-
-        vehicleType: {
-
-            type: String
-
-        },
-
-
-        rcNumber: {
-
-            type: String
-
-        },
-
-
-        serviceType: {
-
-            type: String,
-
-            enum: [
-
-                "finance",
-
-                "insurance"
-
-            ],
-
-            required: true
-
-        },
-
-
-        status: {
-
-            type: String,
-
-            enum: [
-
-                "new",
-
-                "contacted",
-
-                "closed"
-
-            ],
-
-            default: "new"
-
-        }
-
+    enquiryType: {
+      type: String,
+      enum: ["Finance", "Insurance"],
+      required: true
     },
 
-    {
+    loanAmountRequested: { type: String },
+    notes: { type: String },
 
-        timestamps: true
-
+    status: {
+      type: String,
+      enum: ["pending", "contacted"],
+      default: "pending"
     }
-
+  },
+  {
+    timestamps: true
+  }
 );
 
-
-module.exports =
-    mongoose.model(
-        "Enquiry",
-        enquirySchema
-    );
+module.exports = mongoose.model("Enquiry", enquirySchema);

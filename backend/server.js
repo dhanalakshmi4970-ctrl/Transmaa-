@@ -1,103 +1,65 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
 require("dotenv").config();
+
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const morgan = require("morgan");
+
+const connectDB = require("./config/db");
+const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 const app = express();
 
-// ==========================================
-// MIDDLEWARE
-// ==========================================
-
-app.use(cors());
-
+app.use(helmet());
 app.use(express.json());
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-// ==========================================
-// HOME ROUTE
-// ==========================================
+app.use(
+  cors({
+    origin: allowedOrigins.length ? allowedOrigins : true
+  })
+);
+
+if (process.env.NODE_ENV !== "test") {
+  app.use(morgan("dev"));
+}
 
 app.get("/", (req, res) => {
-
-    res.json({
-        message: "Transmaa Staff Backend is Running Successfully!"
-    });
-
+  res.json({ message: "Transmaa Staff Backend is running" });
 });
 
+app.use("/api/staff/auth", require("./routes/staffAuthRoutes"));
+app.use("/api/staff/bookings", require("./routes/staffBookingRoutes"));
+app.use("/api/staff/drivers", require("./routes/staffDriverRoutes"));
+app.use("/api/staff/vehicles", require("./routes/staffVehicleRoutes"));
+app.use("/api/staff/enquiries", require("./routes/staffEnquiryRoutes"));
 
-// ==========================================
-// STAFF ROUTES
-// ==========================================
+app.use(notFound);
+app.use(errorHandler);
 
-app.use(
-    "/api/staff/auth",
-    require("./routes/staffAuthRoutes")
-);
+async function start() {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not set in the environment");
+  }
 
-app.use(
-    "/api/staff/bookings",
-    require("./routes/staffBookingRoutes")
-);
+  await connectDB();
 
-app.use(
-    "/api/staff/drivers",
-    require("./routes/staffDriverRoutes")
-);
+  const PORT = process.env.PORT || 5000;
 
-app.use(
-    "/api/staff/enquiries",
-    require("./routes/staffEnquiryRoutes")
-);
+  app.listen(PORT, () => {
+    console.log(`Transmaa Staff Backend running on http://localhost:${PORT}`);
+  });
+}
 
-app.use(
-    "/api/staff/vehicles",
-    require("./routes/staffVehicleRoutes")
-);
+if (require.main === module) {
+  start().catch((error) => {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
+  });
+}
 
-
-// ==========================================
-// ERROR HANDLING
-// ==========================================
-
-app.use((req, res) => {
-
-    res.status(404).json({
-        message: "Route not found"
-    });
-
-});
-
-
-// ==========================================
-// MONGODB CONNECTION
-// ==========================================
-
-mongoose.connect(process.env.MONGODB_URI)
-
-    .then(() => {
-
-        console.log("=================================");
-        console.log("MongoDB Connected Successfully!");
-        console.log("=================================");
-
-        const PORT = process.env.PORT || 5000;
-
-        app.listen(PORT, () => {
-
-            console.log(
-                `Transmaa Backend running on http://localhost:${PORT}`
-            );
-
-        });
-
-    })
-
-    .catch((error) => {
-
-        console.log("MongoDB Connection Failed!");
-
-        console.log(error.message);
-
-    });
+module.exports = app;

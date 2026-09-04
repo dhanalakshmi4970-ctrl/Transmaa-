@@ -1,670 +1,175 @@
-const Booking =
-    require("../models/Booking");
+const Booking = require("../models/Booking");
+const Driver = require("../models/Driver");
+const asyncHandler = require("../utils/asyncHandler");
 
+const VALID_STATUSES = [
+  "waiting",
+  "accepted",
+  "rejected",
+  "driver_accepted",
+  "on_the_way",
+  "delivered"
+];
 
-// ==========================================
-// GET ALL PENDING BOOKINGS
-// ==========================================
+exports.getBookings = asyncHandler(async (req, res) => {
+  const filter = {};
 
-exports.getPendingBookings =
-    async (req, res) => {
+  if (req.query.status) {
+    if (!VALID_STATUSES.includes(req.query.status)) {
+      return res.status(400).json({ message: "Invalid status filter" });
+    }
+    filter.status = req.query.status;
+  }
 
-        try {
+  const bookings = await Booking.find(filter).sort({ createdAt: -1 });
 
-            const bookings =
-                await Booking.find({
+  res.status(200).json({ count: bookings.length, bookings });
+});
 
-                    status: "pending"
+exports.getBookingById = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
 
-                })
+  if (!booking) {
+    return res.status(404).json({ message: "Booking not found" });
+  }
 
-                    .populate(
+  res.status(200).json({ booking });
+});
 
-                        "customerId",
+exports.acceptBooking = asyncHandler(async (req, res) => {
+  const { price, deliveryName, deliveryPhone, deliveryAddress } = req.body;
 
-                        "name phone"
+  const booking = await Booking.findById(req.params.id);
 
-                    )
+  if (!booking) {
+    return res.status(404).json({ message: "Booking not found" });
+  }
 
-                    .sort({
+  if (booking.status !== "waiting") {
+    return res.status(409).json({ message: `Booking is already ${booking.status}` });
+  }
 
-                        createdAt: -1
+  booking.status = "accepted";
+  if (price !== undefined) booking.price = price;
+  if (deliveryName) booking.deliveryName = deliveryName;
+  if (deliveryPhone) booking.deliveryPhone = deliveryPhone;
+  if (deliveryAddress) booking.deliveryAddress = deliveryAddress;
 
-                    });
+  await booking.save();
 
+  res.status(200).json({ message: "Booking accepted", booking });
+});
 
-            res.status(200).json({
+exports.rejectBooking = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
 
-                count:
-                    bookings.length,
+  if (!booking) {
+    return res.status(404).json({ message: "Booking not found" });
+  }
 
-                bookings:
-                    bookings
+  if (booking.status !== "waiting") {
+    return res.status(409).json({ message: `Booking is already ${booking.status}` });
+  }
 
-            });
+  booking.status = "rejected";
+  booking.rejectionReason = req.body.reason;
 
-        }
+  await booking.save();
 
-        catch (error) {
+  res.status(200).json({ message: "Booking rejected", booking });
+});
 
-            res.status(500).json({
+exports.markDriverAccepted = asyncHandler(async (req, res) => {
+  const { driverId } = req.body;
 
-                message:
-                    error.message
+  if (!driverId) {
+    return res.status(400).json({ message: "driverId is required" });
+  }
 
-            });
+  const booking = await Booking.findById(req.params.id);
 
-        }
+  if (!booking) {
+    return res.status(404).json({ message: "Booking not found" });
+  }
 
-    };
+  if (booking.status !== "accepted") {
+    return res.status(409).json({ message: `Booking must be accepted before a driver can take it` });
+  }
 
+  const driver = await Driver.findById(driverId);
 
+  if (!driver) {
+    return res.status(404).json({ message: "Driver not found" });
+  }
 
-// ==========================================
-// GET ALL BOOKINGS
-// ==========================================
+  if (driver.verificationStatus !== "approved" || driver.status !== "Active") {
+    return res.status(409).json({ message: "Driver is not active/verified" });
+  }
 
-exports.getAllBookings =
-    async (req, res) => {
+  booking.status = "driver_accepted";
+  booking.driverId = driver._id;
+  booking.driverName = driver.name;
+  booking.driverPhone = driver.phone;
+  booking.driverVehicle = `${driver.vehicleNumber || ""} (${driver.vehicleType || ""})`.trim();
 
-        try {
+  await booking.save();
 
-            const bookings =
-                await Booking.find()
+  res.status(200).json({ message: "Driver assigned to booking", booking });
+});
 
-                    .populate(
-                        "customerId",
-                        "name phone"
-                    )
+exports.sendConfirmation = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
 
-                    .populate(
-                        "driverId",
-                        "name phone"
-                    )
+  if (!booking) {
+    return res.status(404).json({ message: "Booking not found" });
+  }
 
-                    .sort({
-                        createdAt: -1
-                    });
+  if (booking.status !== "driver_accepted") {
+    return res.status(409).json({ message: "Booking must have a driver assigned first" });
+  }
 
+  booking.status = "on_the_way";
+  await booking.save();
 
-            res.status(200).json({
+  res.status(200).json({
+    message: "Confirmation sent to customer and driver, order is now on the way",
+    booking
+  });
+});
 
-                count:
-                    bookings.length,
+exports.markDelivered = asyncHandler(async (req, res) => {
+  const booking = await Booking.findById(req.params.id);
 
-                bookings:
-                    bookings
+  if (!booking) {
+    return res.status(404).json({ message: "Booking not found" });
+  }
 
-            });
+  if (booking.status !== "on_the_way") {
+    return res.status(409).json({ message: "Booking must be on the way before it can be delivered" });
+  }
 
-        }
+  booking.status = "delivered";
+  booking.completedAt = new Date();
+  await booking.save();
 
-        catch (error) {
+  res.status(200).json({ message: "Booking marked as delivered", booking });
+});
 
-            res.status(500).json({
+exports.getDashboardStats = asyncHandler(async (req, res) => {
+  const counts = await Booking.aggregate([
+    { $group: { _id: "$status", count: { $sum: 1 } } }
+  ]);
 
-                message:
-                    error.message
+  const stats = VALID_STATUSES.reduce((acc, status) => {
+    acc[status] = 0;
+    return acc;
+  }, {});
 
-            });
+  counts.forEach(({ _id, count }) => {
+    stats[_id] = count;
+  });
 
-        }
+  const total = await Booking.countDocuments();
 
-    };
-
-
-
-// ==========================================
-// GET SINGLE BOOKING
-// ==========================================
-
-exports.getBookingById =
-    async (req, res) => {
-
-        try {
-
-            const booking =
-                await Booking.findById(
-
-                    req.params.id
-
-                )
-
-                    .populate(
-                        "customerId",
-                        "name phone"
-                    )
-
-                    .populate(
-                        "driverId",
-                        "name phone"
-                    );
-
-
-            if (!booking) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Booking not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                booking:
-                    booking
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// APPROVE BOOKING
-// ==========================================
-
-exports.approveBooking =
-    async (req, res) => {
-
-        try {
-
-            const booking =
-                await Booking.findByIdAndUpdate(
-
-                    req.params.id,
-
-                    {
-
-                        status:
-                            "approved"
-
-                    },
-
-                    {
-
-                        new: true
-
-                    }
-
-                );
-
-
-            if (!booking) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Booking not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                message:
-                    "Booking approved successfully",
-
-                booking:
-                    booking
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// REJECT BOOKING
-// ==========================================
-
-exports.rejectBooking =
-    async (req, res) => {
-
-        try {
-
-            const booking =
-                await Booking.findByIdAndUpdate(
-
-                    req.params.id,
-
-                    {
-
-                        status:
-                            "rejected"
-
-                    },
-
-                    {
-
-                        new: true
-
-                    }
-
-                );
-
-
-            if (!booking) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Booking not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                message:
-                    "Booking rejected",
-
-                booking:
-                    booking
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// DRIVER ACCEPTED ORDERS
-// ==========================================
-
-exports.getDriverAcceptedOrders =
-    async (req, res) => {
-
-        try {
-
-            const orders =
-                await Booking.find({
-
-                    status:
-                        "driver_accepted"
-
-                })
-
-                    .populate(
-
-                        "customerId",
-
-                        "name phone"
-
-                    )
-
-                    .populate(
-
-                        "driverId",
-
-                        "name phone"
-
-                    )
-
-                    .sort({
-
-                        updatedAt:
-                            -1
-
-                    });
-
-
-            res.status(200).json({
-
-                count:
-                    orders.length,
-
-                orders:
-                    orders
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// CONFIRM PICKUP
-// ==========================================
-
-exports.confirmPickup =
-    async (req, res) => {
-
-        try {
-
-            const booking =
-                await Booking.findByIdAndUpdate(
-
-                    req.params.id,
-
-                    {
-
-                        status:
-                            "confirmed"
-
-                    },
-
-                    {
-
-                        new: true
-
-                    }
-
-                );
-
-
-            if (!booking) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Booking not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                message:
-                    "Pickup confirmed successfully",
-
-                booking:
-                    booking
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// GET ACTIVE ORDERS
-// ==========================================
-
-exports.getActiveOrders =
-    async (req, res) => {
-
-        try {
-
-            const orders =
-                await Booking.find({
-
-                    status: {
-
-                        $in: [
-
-                            "confirmed",
-
-                            "on_the_way"
-
-                        ]
-
-                    }
-
-                })
-
-                    .populate(
-                        "customerId",
-                        "name phone"
-                    )
-
-                    .populate(
-                        "driverId",
-                        "name phone"
-                    );
-
-
-            res.status(200).json({
-
-                count:
-                    orders.length,
-
-                orders:
-                    orders
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// GET COMPLETED ORDERS
-// ==========================================
-
-exports.getCompletedOrders =
-    async (req, res) => {
-
-        try {
-
-            const orders =
-                await Booking.find({
-
-                    status:
-                        "delivered"
-
-                })
-
-                    .populate(
-                        "customerId",
-                        "name phone"
-                    )
-
-                    .populate(
-                        "driverId",
-                        "name phone"
-                    );
-
-
-            res.status(200).json({
-
-                count:
-                    orders.length,
-
-                orders:
-                    orders
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// STAFF DASHBOARD STATISTICS
-// ==========================================
-
-exports.getDashboardStats =
-    async (req, res) => {
-
-        try {
-
-            const totalBookings =
-                await Booking.countDocuments();
-
-
-            const pendingBookings =
-                await Booking.countDocuments({
-
-                    status:
-                        "pending"
-
-                });
-
-
-            const approvedBookings =
-                await Booking.countDocuments({
-
-                    status:
-                        "approved"
-
-                });
-
-
-            const rejectedBookings =
-                await Booking.countDocuments({
-
-                    status:
-                        "rejected"
-
-                });
-
-
-            const activeOrders =
-                await Booking.countDocuments({
-
-                    status: {
-
-                        $in: [
-
-                            "confirmed",
-
-                            "on_the_way"
-
-                        ]
-
-                    }
-
-                });
-
-
-            const deliveredOrders =
-                await Booking.countDocuments({
-
-                    status:
-                        "delivered"
-
-                });
-
-
-            res.status(200).json({
-
-                totalBookings,
-
-                pendingBookings,
-
-                approvedBookings,
-
-                rejectedBookings,
-
-                activeOrders,
-
-                deliveredOrders
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
+  res.status(200).json({ total, byStatus: stats });
+});

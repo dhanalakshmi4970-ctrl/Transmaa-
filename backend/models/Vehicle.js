@@ -1,165 +1,41 @@
 const mongoose = require("mongoose");
 
-
-const vehicleSchema = new mongoose.Schema(
-
-    {
-
-        // ==================================
-        // OWNER DETAILS
-        // ==================================
-
-        ownerId: {
-
-            type: mongoose.Schema.Types.ObjectId,
-
-            ref: "User",
-
-            required: true
-
-        },
-
-
-        ownerName: {
-
-            type: String
-
-        },
-
-
-        ownerPhone: {
-
-            type: String
-
-        },
-
-
-        // ==================================
-        // VEHICLE DETAILS
-        // ==================================
-
-        vehicleType: {
-
-            type: String,
-
-            required: true
-
-        },
-
-
-        vehicleBrand: {
-
-            type: String
-
-        },
-
-
-        vehicleModel: {
-
-            type: String
-
-        },
-
-
-        vehicleNumber: {
-
-            type: String
-
-        },
-
-
-        manufacturingYear: {
-
-            type: Number
-
-        },
-
-
-        price: {
-
-            type: Number
-
-        },
-
-
-        description: {
-
-            type: String
-
-        },
-
-
-        image: {
-
-            type: String
-
-        },
-
-
-        // ==================================
-        // VEHICLE STATUS
-        // ==================================
-
-        status: {
-
-            type: String,
-
-            enum: [
-
-                "pending",
-
-                "approved",
-
-                "rejected",
-
-                "sold"
-
-            ],
-
-            default: "pending"
-
-        },
-
-
-        // ==================================
-        // BUYER INTEREST
-        // ==================================
-
-        interestedBuyers: [
-
-            {
-
-                buyerName: String,
-
-                buyerPhone: String,
-
-                message: String,
-
-                createdAt: {
-
-                    type: Date,
-
-                    default: Date.now
-
-                }
-
-            }
-
-        ]
-
-    },
-
-    {
-
-        timestamps: true
-
-    }
-
+const interestedBuyerSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    requestedAt: { type: Date, default: Date.now }
+  },
+  { _id: true }
 );
 
+const vehicleSchema = new mongoose.Schema(
+  {
+    sellerName: { type: String, required: true },
+    sellerPhone: { type: String, required: true },
 
-module.exports =
-    mongoose.model(
-        "Vehicle",
-        vehicleSchema
-    );
+    makeModel: { type: String, required: true },
+    year: { type: Number },
+    rcNumber: { type: String, required: true },
+    price: { type: String },
+    kmDriven: { type: String },
+    fuelType: { type: String },
+    location: { type: String },
+    description: { type: String },
+    photos: [{ type: String }],
+
+    status: {
+      type: String,
+      enum: ["pending", "live", "rejected", "sold"],
+      default: "pending"
+    },
+
+    publishedAt: { type: Date },
+    interestedBuyers: [interestedBuyerSchema]
+  },
+  {
+    timestamps: true
+  }
+);
+
+module.exports = mongoose.model("Vehicle", vehicleSchema);

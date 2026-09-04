@@ -1,372 +1,52 @@
-const Vehicle =
-    require("../models/Vehicle");
+const Vehicle = require("../models/Vehicle");
+const asyncHandler = require("../utils/asyncHandler");
 
+exports.getVehicles = asyncHandler(async (req, res) => {
+  const filter = {};
 
-// ==========================================
-// GET PENDING VEHICLES
-// ==========================================
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
 
-exports.getPendingVehicles =
-    async (req, res) => {
+  const vehicles = await Vehicle.find(filter).sort({ createdAt: -1 });
 
-        try {
+  res.status(200).json({ count: vehicles.length, vehicles });
+});
 
-            const vehicles =
-                await Vehicle.find({
+exports.getVehicleById = asyncHandler(async (req, res) => {
+  const vehicle = await Vehicle.findById(req.params.id);
 
-                    status:
-                        "pending"
+  if (!vehicle) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
 
-                })
+  res.status(200).json({ vehicle });
+});
 
-                    .populate(
+exports.approveVehicle = asyncHandler(async (req, res) => {
+  const vehicle = await Vehicle.findByIdAndUpdate(
+    req.params.id,
+    { status: "live", publishedAt: new Date() },
+    { new: true }
+  );
 
-                        "ownerId",
+  if (!vehicle) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
 
-                        "name phone"
+  res.status(200).json({ message: "Listing approved and published live", vehicle });
+});
 
-                    )
+exports.rejectVehicle = asyncHandler(async (req, res) => {
+  const vehicle = await Vehicle.findByIdAndUpdate(
+    req.params.id,
+    { status: "rejected" },
+    { new: true }
+  );
 
-                    .sort({
+  if (!vehicle) {
+    return res.status(404).json({ message: "Listing not found" });
+  }
 
-                        createdAt:
-                            -1
-
-                    });
-
-
-            res.status(200).json({
-
-                count:
-                    vehicles.length,
-
-                vehicles:
-                    vehicles
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// GET ALL VEHICLES
-// ==========================================
-
-exports.getAllVehicles =
-    async (req, res) => {
-
-        try {
-
-            const vehicles =
-                await Vehicle.find()
-
-                    .populate(
-
-                        "ownerId",
-
-                        "name phone"
-
-                    )
-
-                    .sort({
-
-                        createdAt:
-                            -1
-
-                    });
-
-
-            res.status(200).json({
-
-                count:
-                    vehicles.length,
-
-                vehicles:
-                    vehicles
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// GET SINGLE VEHICLE
-// ==========================================
-
-exports.getVehicleById =
-    async (req, res) => {
-
-        try {
-
-            const vehicle =
-                await Vehicle.findById(
-
-                    req.params.id
-
-                )
-
-                    .populate(
-
-                        "ownerId",
-
-                        "name phone"
-
-                    );
-
-
-            if (!vehicle) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Vehicle not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                vehicle:
-                    vehicle
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// APPROVE VEHICLE
-// ==========================================
-
-exports.approveVehicle =
-    async (req, res) => {
-
-        try {
-
-            const vehicle =
-                await Vehicle.findByIdAndUpdate(
-
-                    req.params.id,
-
-                    {
-
-                        status:
-                            "approved"
-
-                    },
-
-                    {
-
-                        new: true
-
-                    }
-
-                );
-
-
-            if (!vehicle) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Vehicle not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                message:
-                    "Vehicle approved successfully",
-
-                vehicle:
-                    vehicle
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// REJECT VEHICLE
-// ==========================================
-
-exports.rejectVehicle =
-    async (req, res) => {
-
-        try {
-
-            const vehicle =
-                await Vehicle.findByIdAndUpdate(
-
-                    req.params.id,
-
-                    {
-
-                        status:
-                            "rejected"
-
-                    },
-
-                    {
-
-                        new: true
-
-                    }
-
-                );
-
-
-            if (!vehicle) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Vehicle not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                message:
-                    "Vehicle rejected",
-
-                vehicle:
-                    vehicle
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// GET BUYER INTERESTS
-// ==========================================
-
-exports.getVehicleInterests =
-    async (req, res) => {
-
-        try {
-
-            const vehicles =
-                await Vehicle.find({
-
-                    "interestedBuyers.0": {
-
-                        $exists:
-                            true
-
-                    }
-
-                })
-
-                    .populate(
-
-                        "ownerId",
-
-                        "name phone"
-
-                    );
-
-
-            res.status(200).json({
-
-                count:
-                    vehicles.length,
-
-                vehicles:
-                    vehicles
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
+  res.status(200).json({ message: "Listing rejected", vehicle });
+});

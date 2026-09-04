@@ -1,206 +1,37 @@
-const Enquiry =
-    require("../models/Enquiry");
+const Enquiry = require("../models/Enquiry");
+const asyncHandler = require("../utils/asyncHandler");
 
+exports.getEnquiries = asyncHandler(async (req, res) => {
+  const filter = {};
 
-// ==========================================
-// GET ALL ENQUIRIES
-// ==========================================
+  if (req.query.status) {
+    filter.status = req.query.status;
+  }
 
-exports.getAllEnquiries =
-    async (req, res) => {
+  const enquiries = await Enquiry.find(filter).sort({ createdAt: -1 });
 
-        try {
+  res.status(200).json({ count: enquiries.length, enquiries });
+});
 
-            const enquiries =
-                await Enquiry.find()
+exports.getEnquiryById = asyncHandler(async (req, res) => {
+  const enquiry = await Enquiry.findById(req.params.id);
 
-                    .sort({
+  if (!enquiry) {
+    return res.status(404).json({ message: "Enquiry not found" });
+  }
 
-                        createdAt:
-                            -1
+  res.status(200).json({ enquiry });
+});
 
-                    });
+exports.toggleContactedStatus = asyncHandler(async (req, res) => {
+  const enquiry = await Enquiry.findById(req.params.id);
 
+  if (!enquiry) {
+    return res.status(404).json({ message: "Enquiry not found" });
+  }
 
-            res.status(200).json({
+  enquiry.status = enquiry.status === "contacted" ? "pending" : "contacted";
+  await enquiry.save();
 
-                count:
-                    enquiries.length,
-
-                enquiries:
-                    enquiries
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// GET SINGLE ENQUIRY
-// ==========================================
-
-exports.getEnquiryById =
-    async (req, res) => {
-
-        try {
-
-            const enquiry =
-                await Enquiry.findById(
-
-                    req.params.id
-
-                );
-
-
-            if (!enquiry) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Enquiry not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                enquiry:
-                    enquiry
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// UPDATE ENQUIRY STATUS
-// ==========================================
-
-exports.updateEnquiryStatus =
-    async (req, res) => {
-
-        try {
-
-            const {
-
-                status
-
-            } = req.body;
-
-
-            const allowedStatus = [
-
-                "new",
-
-                "contacted",
-
-                "closed"
-
-            ];
-
-
-            if (
-
-                !allowedStatus.includes(
-                    status
-                )
-
-            ) {
-
-                return res.status(400).json({
-
-                    message:
-                        "Invalid status"
-
-                });
-
-            }
-
-
-            const enquiry =
-                await Enquiry.findByIdAndUpdate(
-
-                    req.params.id,
-
-                    {
-
-                        status:
-                            status
-
-                    },
-
-                    {
-
-                        new: true
-
-                    }
-
-                );
-
-
-            if (!enquiry) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Enquiry not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                message:
-                    "Enquiry status updated",
-
-                enquiry:
-                    enquiry
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
+  res.status(200).json({ message: "Lead status updated", enquiry });
+});

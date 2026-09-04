@@ -1,176 +1,76 @@
 const mongoose = require("mongoose");
 
+const GOODS_TYPES = [
+  "Timber/Plywood/Laminate",
+  "Electrical/Electronics/Home Appliances",
+  "General",
+  "Building/Construction",
+  "Catering/Restaurant/Event Management",
+  "Machines/Equipments/Spare Parts/Metals",
+  "Textile/Garments/Fashion Accessories",
+  "Furniture/Home Furnishing",
+  "House Shifting",
+  "Ceramics/Sanitary/Hardware",
+  "Paper/Packaging/Printed Material"
+];
 
 const bookingSchema = new mongoose.Schema(
-
-    {
-
-        // ==================================
-        // CUSTOMER
-        // ==================================
-
-        customerId: {
-
-            type: mongoose.Schema.Types.ObjectId,
-
-            ref: "User",
-
-            required: true
-
-        },
-
-
-        // ==================================
-        // DRIVER
-        // ==================================
-
-        driverId: {
-
-            type: mongoose.Schema.Types.ObjectId,
-
-            ref: "User",
-
-            default: null
-
-        },
-
-
-        // ==================================
-        // LOCATION DETAILS
-        // ==================================
-
-        fromLocation: {
-
-            type: String,
-
-            required: true
-
-        },
-
-
-        toLocation: {
-
-            type: String,
-
-            required: true
-
-        },
-
-
-        // ==================================
-        // SHIFTING DETAILS
-        // ==================================
-
-        shiftingDate: {
-
-            type: Date
-
-        },
-
-
-        shiftingTime: {
-
-            type: String
-
-        },
-
-
-        goodsType: {
-
-            type: String
-
-        },
-
-
-        truckType: {
-
-            type: String
-
-        },
-
-
-        tonnage: {
-
-            type: Number
-
-        },
-
-
-        budget: {
-
-            type: Number
-
-        },
-
-
-        // ==================================
-        // DELIVERY DETAILS
-        // ==================================
-
-        deliveryName: {
-
-            type: String
-
-        },
-
-
-        deliveryPhone: {
-
-            type: String
-
-        },
-
-
-        deliveryAddress: {
-
-            type: String
-
-        },
-
-
-        // ==================================
-        // ORDER STATUS
-        // ==================================
-
-        status: {
-
-            type: String,
-
-            enum: [
-
-                "pending",
-
-                "approved",
-
-                "rejected",
-
-                "driver_accepted",
-
-                "confirmed",
-
-                "on_the_way",
-
-                "delivered"
-
-            ],
-
-            default: "pending"
-
-        }
-
+  {
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
+    customerName: { type: String, required: true },
+    customerPhone: { type: String, required: true },
+
+    fromLocation: { type: String, required: true },
+    toLocation: { type: String, required: true },
+
+    shiftingDate: { type: Date },
+    shiftingTime: { type: String },
+    goodsType: { type: String, enum: GOODS_TYPES },
+
+    truckType: { type: String },
+    truckCapacity: { type: String },
+
+    price: { type: Number },
+
+    deliveryName: { type: String },
+    deliveryPhone: { type: String },
+    deliveryAddress: { type: String },
+
+    driverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Driver",
+      default: null
+    },
+    driverName: { type: String },
+    driverPhone: { type: String },
+    driverVehicle: { type: String },
+
+    status: {
+      type: String,
+      enum: [
+        "waiting",
+        "accepted",
+        "rejected",
+        "driver_accepted",
+        "on_the_way",
+        "delivered"
+      ],
+      default: "waiting"
     },
 
-    {
-
-        timestamps: true
-
-    }
-
+    rejectionReason: { type: String },
+    completedAt: { type: Date }
+  },
+  {
+    timestamps: true
+  }
 );
 
+bookingSchema.index({ status: 1, createdAt: -1 });
 
-module.exports =
-    mongoose.model(
-        "Booking",
-        bookingSchema
-    );
+module.exports = mongoose.model("Booking", bookingSchema);
+module.exports.GOODS_TYPES = GOODS_TYPES;

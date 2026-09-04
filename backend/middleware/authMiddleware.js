@@ -1,81 +1,38 @@
-const jwt =
-    require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const asyncHandler = require("../utils/asyncHandler");
 
+module.exports = asyncHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-module.exports =
-    (req, res, next) => {
+  if (!authHeader) {
+    return res.status(401).json({ message: "Authorization token is required" });
+  }
 
-        try {
+  const parts = authHeader.split(" ");
 
-            const authHeader =
-                req.headers.authorization;
+  if (parts.length !== 2 || parts[0] !== "Bearer") {
+    return res.status(401).json({ message: "Invalid authorization format" });
+  }
 
+  let decoded;
 
-            if (!authHeader) {
+  try {
+    decoded = jwt.verify(parts[1], process.env.JWT_SECRET);
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
 
-                return res.status(401).json({
+  const user = await User.findById(decoded.id);
 
-                    message:
-                        "Authorization token is required"
+  if (!user) {
+    return res.status(401).json({ message: "Account no longer exists" });
+  }
 
-                });
+  if (user.status !== "active") {
+    return res.status(403).json({ message: "Account is not active" });
+  }
 
-            }
-
-
-            const parts =
-                authHeader.split(" ");
-
-
-            if (
-
-                parts.length !== 2 ||
-
-                parts[0] !== "Bearer"
-
-            ) {
-
-                return res.status(401).json({
-
-                    message:
-                        "Invalid authorization format"
-
-                });
-
-            }
-
-
-            const token =
-                parts[1];
-
-
-            const decoded =
-                jwt.verify(
-
-                    token,
-
-                    process.env.JWT_SECRET
-
-                );
-
-
-            req.user =
-                decoded;
-
-
-            next();
-
-        }
-
-        catch (error) {
-
-            return res.status(401).json({
-
-                message:
-                    "Invalid or expired token"
-
-            });
-
-        }
-
-    };
+  req.user = user;
+  next();
+});

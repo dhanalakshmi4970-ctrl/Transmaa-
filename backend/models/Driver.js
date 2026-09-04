@@ -1,151 +1,44 @@
 const mongoose = require("mongoose");
 
-
 const driverSchema = new mongoose.Schema(
-
-    {
-
-        // ==================================
-        // USER CONNECTION
-        // ==================================
-
-        userId: {
-
-            type: mongoose.Schema.Types.ObjectId,
-
-            ref: "User",
-
-            required: true
-
-        },
-
-
-        // ==================================
-        // PERSONAL DETAILS
-        // ==================================
-
-        name: {
-
-            type: String,
-
-            required: true
-
-        },
-
-
-        dob: {
-
-            type: Date
-
-        },
-
-
-        gender: {
-
-            type: String
-
-        },
-
-
-        bio: {
-
-            type: String
-
-        },
-
-
-        photo: {
-
-            type: String
-
-        },
-
-
-        experience: {
-
-            type: Number
-
-        },
-
-
-        // ==================================
-        // VEHICLE DETAILS
-        // ==================================
-
-        vehicleType: {
-
-            type: String
-
-        },
-
-
-        vehicleModel: {
-
-            type: String
-
-        },
-
-
-        vehicleNumber: {
-
-            type: String
-
-        },
-
-
-        // ==================================
-        // DOCUMENT DETAILS
-        // ==================================
-
-        dlNumber: {
-
-            type: String
-
-        },
-
-
-        panNumber: {
-
-            type: String
-
-        },
-
-
-        // ==================================
-        // VERIFICATION
-        // ==================================
-
-        verificationStatus: {
-
-            type: String,
-
-            enum: [
-
-                "pending",
-
-                "approved",
-
-                "rejected"
-
-            ],
-
-            default: "pending"
-
-        }
-
+  {
+    name: { type: String, required: true },
+    phone: {
+      type: String,
+      required: true,
+      unique: true,
+      match: [/^\d{10}$/, "Phone must be a 10-digit number"]
+    },
+    photo: { type: String },
+    gender: { type: String },
+    dob: { type: Date },
+    bio: { type: String },
+
+    experienceYears: { type: Number },
+    vehicleType: { type: String },
+    vehicleModel: { type: String },
+    vehicleNumber: { type: String },
+    dlNumber: { type: String },
+    panNumber: { type: String },
+
+    verificationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending"
     },
 
-    {
+    status: {
+      type: String,
+      enum: ["Active", "Inactive"],
+      default: "Active"
+    },
 
-        timestamps: true
-
-    }
-
+    rating: { type: Number, default: 5.0 },
+    tripsCompleted: { type: Number, default: 0 }
+  },
+  {
+    timestamps: true
+  }
 );
 
-
-module.exports =
-    mongoose.model(
-        "Driver",
-        driverSchema
-    );
+module.exports = mongoose.model("Driver", driverSchema);

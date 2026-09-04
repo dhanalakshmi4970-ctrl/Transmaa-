@@ -1,312 +1,65 @@
-const Driver =
-    require("../models/Driver");
+const Driver = require("../models/Driver");
+const asyncHandler = require("../utils/asyncHandler");
 
+exports.getDrivers = asyncHandler(async (req, res) => {
+  const filter = {};
 
-// ==========================================
-// GET PENDING DRIVERS
-// ==========================================
+  if (req.query.verificationStatus) {
+    filter.verificationStatus = req.query.verificationStatus;
+  }
 
-exports.getPendingDrivers =
-    async (req, res) => {
+  const drivers = await Driver.find(filter).sort({ createdAt: -1 });
 
-        try {
+  res.status(200).json({ count: drivers.length, drivers });
+});
 
-            const drivers =
-                await Driver.find({
+exports.getDriverById = asyncHandler(async (req, res) => {
+  const driver = await Driver.findById(req.params.id);
 
-                    verificationStatus:
-                        "pending"
+  if (!driver) {
+    return res.status(404).json({ message: "Driver not found" });
+  }
 
-                })
+  res.status(200).json({ driver });
+});
 
-                    .populate(
+exports.approveDriver = asyncHandler(async (req, res) => {
+  const driver = await Driver.findByIdAndUpdate(
+    req.params.id,
+    { verificationStatus: "approved", status: "Active" },
+    { new: true }
+  );
 
-                        "userId",
+  if (!driver) {
+    return res.status(404).json({ message: "Driver not found" });
+  }
 
-                        "name phone"
+  res.status(200).json({ message: "Driver approved and verified", driver });
+});
 
-                    )
+exports.rejectDriver = asyncHandler(async (req, res) => {
+  const driver = await Driver.findByIdAndUpdate(
+    req.params.id,
+    { verificationStatus: "rejected" },
+    { new: true }
+  );
 
-                    .sort({
+  if (!driver) {
+    return res.status(404).json({ message: "Driver not found" });
+  }
 
-                        createdAt:
-                            -1
+  res.status(200).json({ message: "Driver registration rejected", driver });
+});
 
-                    });
+exports.toggleDriverStatus = asyncHandler(async (req, res) => {
+  const driver = await Driver.findById(req.params.id);
 
+  if (!driver) {
+    return res.status(404).json({ message: "Driver not found" });
+  }
 
-            res.status(200).json({
+  driver.status = driver.status === "Active" ? "Inactive" : "Active";
+  await driver.save();
 
-                count:
-                    drivers.length,
-
-                drivers:
-                    drivers
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// GET ALL DRIVERS
-// ==========================================
-
-exports.getAllDrivers =
-    async (req, res) => {
-
-        try {
-
-            const drivers =
-                await Driver.find()
-
-                    .populate(
-                        "userId",
-                        "name phone"
-                    )
-
-                    .sort({
-
-                        createdAt:
-                            -1
-
-                    });
-
-
-            res.status(200).json({
-
-                count:
-                    drivers.length,
-
-                drivers:
-                    drivers
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// GET SINGLE DRIVER
-// ==========================================
-
-exports.getDriverById =
-    async (req, res) => {
-
-        try {
-
-            const driver =
-                await Driver.findById(
-
-                    req.params.id
-
-                )
-
-                    .populate(
-
-                        "userId",
-
-                        "name phone"
-
-                    );
-
-
-            if (!driver) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Driver not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                driver:
-                    driver
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// APPROVE DRIVER
-// ==========================================
-
-exports.approveDriver =
-    async (req, res) => {
-
-        try {
-
-            const driver =
-                await Driver.findByIdAndUpdate(
-
-                    req.params.id,
-
-                    {
-
-                        verificationStatus:
-                            "approved"
-
-                    },
-
-                    {
-
-                        new: true
-
-                    }
-
-                );
-
-
-            if (!driver) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Driver not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                message:
-                    "Driver approved successfully",
-
-                driver:
-                    driver
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
-
-
-
-// ==========================================
-// REJECT DRIVER
-// ==========================================
-
-exports.rejectDriver =
-    async (req, res) => {
-
-        try {
-
-            const driver =
-                await Driver.findByIdAndUpdate(
-
-                    req.params.id,
-
-                    {
-
-                        verificationStatus:
-                            "rejected"
-
-                    },
-
-                    {
-
-                        new: true
-
-                    }
-
-                );
-
-
-            if (!driver) {
-
-                return res.status(404).json({
-
-                    message:
-                        "Driver not found"
-
-                });
-
-            }
-
-
-            res.status(200).json({
-
-                message:
-                    "Driver rejected",
-
-                driver:
-                    driver
-
-            });
-
-        }
-
-        catch (error) {
-
-            res.status(500).json({
-
-                message:
-                    error.message
-
-            });
-
-        }
-
-    };
+  res.status(200).json({ message: "Driver status updated", driver });
+});
