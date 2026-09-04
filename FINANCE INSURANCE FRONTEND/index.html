@@ -1,0 +1,67 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transmaa - Finance & Insurance</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <header>
+        <h1>TRANSMAA</h1>
+        <button class="help-btn" onclick="showHelp()">?</button>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+
+        <h2>Commercial Vehicles</h2>
+
+        <!-- Finance / Insurance Buttons -->
+        <div class="top-buttons">
+            <button class="finance-btn" onclick="openFinance()">
+                Finance
+            </button>
+
+            <button class="insurance-btn" onclick="openInsurance()">
+                Insurance
+            </button>
+        </div>
+
+        <!-- Common Details -->
+        <div class="form-section">
+
+            <label>Name</label>
+            <input type="text" id="name" placeholder="Enter your name">
+
+            <label>Phone Number</label>
+            <input type="tel" id="phone" placeholder="Enter phone number">
+
+            <label>Type of Vehicle</label>
+            <input type="text" id="vehicle" placeholder="Enter vehicle type">
+
+            <label>RC Number</label>
+            <input type="text" id="rc" placeholder="Enter RC number">
+
+            <label>Loan Amount</label>
+            <input type="number" id="loan" placeholder="Enter loan amount">
+
+            <button class="submit-btn" onclick="submitDetails()">
+                Submit
+            </button>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

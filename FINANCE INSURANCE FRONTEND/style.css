@@ -1,0 +1,237 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f2f3;
+    color: #111;
+}
+
+.container {
+    width: 100%;
+    max-width: 563px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background: white;
+}
+
+/* Header */
+
+header {
+    height: 90px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 25px;
+}
+
+header h1 {
+    font-size: 27px;
+    letter-spacing: 1px;
+    color: #263746;
+}
+
+.help-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #555;
+    background: white;
+    font-size: 18px;
+    cursor: pointer;
+    color: #333;
+}
+
+/* Main */
+
+main {
+    padding: 31px 25px 50px;
+}
+
+main h2 {
+    text-align: center;
+    font-size: 25px;
+    margin-bottom: 25px;
+}
+
+/* Finance / Insurance */
+
+.top-buttons {
+    display: flex;
+    gap: 13px;
+    margin-bottom: 32px;
+}
+
+.top-buttons button {
+    flex: 1;
+    height: 57px;
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-size: 19px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.finance-btn {
+    background: #4caf50;
+}
+
+.insurance-btn {
+    background: #f6a00d;
+}
+
+.finance-btn:hover {
+    background: #439c47;
+}
+
+.insurance-btn:hover {
+    background: #e99308;
+}
+
+/* Form */
+
+.form-section {
+    width: 100%;
+}
+
+.form-section label {
+    display: block;
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.form-section input {
+    width: 100%;
+    height: 57px;
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    padding: 0 15px;
+    font-size: 17px;
+    margin-bottom: 2px;
+    outline: none;
+}
+
+.form-section input:focus {
+    border-color: #777;
+}
+
+.form-section input::placeholder {
+    color: #777;
+}
+
+/* Submit */
+
+.submit-btn {
+    margin-top: 34px;
+    width: 150px;
+    height: 57px;
+    border: none;
+    border-radius: 30px;
+    background: #333333;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background: #222;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+    .container {
+        max-width: 100%;
+    }
+
+    header {
+        padding: 0 20px;
+    }
+
+    main {
+        padding: 28px 20px 40px;
+    }
+
+    main h2 {
+        font-size: 23px;
+    }
+
+    .top-buttons button {
+        font-size: 17px;
+    }
+}
+/* ============================= */
+/* INSURANCE GREEN + ORANGE THEME */
+/* ============================= */
+
+.insurance-theme {
+    border-top: 6px solid #4CAF50;
+}
+
+/* Vehicle Insurance */
+
+.insurance-theme h2 {
+    color: #f6a00d;
+    font-size: 30px;
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+/* Labels */
+
+.insurance-theme .form-section label {
+    color: #111;
+}
+
+/* Input */
+
+.insurance-theme .form-section input {
+    border-left: 4px solid #4CAF50;
+}
+
+/* Input focus */
+
+.insurance-theme .form-section input:focus {
+    border: 2px solid #f6a00d;
+    border-left: 4px solid #4CAF50;
+    outline: none;
+}
+
+/* Help button */
+
+.insurance-theme .help-btn {
+    border: 2px solid #4CAF50;
+    color: #f6a00d;
+}
+
+/* Submit */
+
+.insurance-submit {
+    margin-top: 40px;
+
+    width: 188px;
+    height: 72px;
+
+    border: none;
+    border-radius: 40px;
+
+    background: #f6a00d;
+    color: white;
+
+    font-size: 21px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.insurance-submit:hover {
+    background: #e68900;
+}
